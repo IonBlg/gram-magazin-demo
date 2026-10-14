@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalog — Gram (magazin demo)</title>
+  <meta name="description" content="Catalogul Gram: rucsacuri, lumini, bețe, apă, siguranță și gătit pentru hiking, cu greutatea fiecărei variante. Magazin demo.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23C2410C'/%3E%3Ctext x='16' y='23' font-family='Arial' font-weight='800' font-size='20' fill='%23fff' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <!-- Previzualizarea când linkul e trimis pe LinkedIn, Telegram, Facebook etc. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Gram">
+  <meta property="og:locale" content="ro_RO">
+  <meta property="og:title" content="Catalog — Gram (magazin demo)">
+  <meta property="og:description" content="Catalogul Gram: rucsacuri, lumini, bețe, apă, siguranță și gătit pentru hiking, cu greutatea fiecărei variante. Magazin demo.">
+  <meta property="og:url" content="https://ionblg.github.io/gram-magazin-demo/catalog.html">
+  <meta property="og:image" content="https://ionblg.github.io/gram-magazin-demo/images/og-gram.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Două rucsacuri de trekking pe o pajiște, cu munți în spate">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="catalog">
+  <a class="skip-link" href="#main">Sari la conținut</a>
+
+  <header id="site-header"></header>
+
+  <main id="main">
+    <div class="container">
+
+      <!-- Titlul, breadcrumb-ul și numărul de produse le pune main.js -->
+      <div class="page-head">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol id="catalog-crumb"></ol>
+        </nav>
+        <div class="page-title-row">
+          <h1 id="catalog-title" tabindex="-1">Catalog</h1>
+          <!-- aria-live: cititoarele de ecran anunță numărul nou după fiecare filtru -->
+          <p class="page-count" id="catalog-count" aria-live="polite"></p>
+        </div>
+        <p class="catalog-search" id="catalog-search" hidden>
+          <span>Rezultate pentru „<strong id="catalog-search-term"></strong>”</span>
+          <button class="text-btn" type="button" data-clear-search>Șterge căutarea</button>
+        </p>
+      </div>
+
+      <!-- Filtre și sortare: main.js actualizează grila și adresa (?cat=...&sort=...) -->
+      <div id="catalog-filters">
+        <div class="catalog-toolbar">
+          <button class="btn btn-secondary filters-toggle" type="button" aria-expanded="false" aria-controls="filters-panel">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true" focusable="false"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><path d="M15 4v4M9 10v4M17 16v4"/></svg>
+            Filtre și sortare<span id="filters-toggle-count"></span>
+          </button>
+        </div>
+
+        <form class="filters" id="filters-panel" aria-label="Filtre și sortare">
+          <div class="field">
+            <label class="field-label" for="filter-category">Categorie</label>
+            <select class="select" id="filter-category" name="cat"></select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="filter-trip">Tip tură</label>
+            <select class="select" id="filter-trip" name="trip"></select>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" id="filter-stock" name="stock">
+            Doar în stoc
+          </label>
+
+          <label class="check">
+            <input type="checkbox" id="filter-light" name="light">
+            Sub 100 g
+          </label>
+
+          <div class="field field-sort">
+            <label class="field-label" for="sort">Sortează</label>
+            <select class="select" id="sort" name="sort">
+              <option value="recomandate">Recomandate</option>
+              <option value="pret-crescator">Preț crescător</option>
+              <option value="pret-descrescator">Preț descrescător</option>
+              <option value="usoare">Cele mai ușoare</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <section aria-labelledby="catalog-title">
+        <div class="product-grid" id="catalog-grid"></div>
+
+        <!-- Când filtrele nu găsesc nimic -->
+        <div class="empty-state" id="catalog-empty" hidden>
+          <p>Niciun produs nu se potrivește filtrelor alese.</p>
+          <button class="btn btn-secondary" type="button" data-reset-filters>Resetează filtrele</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

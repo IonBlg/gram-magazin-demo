@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout — Gram (magazin demo)</title>
+  <meta name="description" content="Finalizarea unei comenzi de test în magazinul demo Gram: contact, livrare și plată. Nu se face nicio plată.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23C2410C'/%3E%3Ctext x='16' y='23' font-family='Arial' font-weight='800' font-size='20' fill='%23fff' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <!-- Previzualizarea când linkul e trimis pe LinkedIn, Telegram, Facebook etc. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Gram">
+  <meta property="og:locale" content="ro_RO">
+  <meta property="og:title" content="Checkout — Gram (magazin demo)">
+  <meta property="og:description" content="Finalizarea unei comenzi de test în magazinul demo Gram: contact, livrare și plată. Nu se face nicio plată.">
+  <meta property="og:url" content="https://ionblg.github.io/gram-magazin-demo/checkout.html">
+  <meta property="og:image" content="https://ionblg.github.io/gram-magazin-demo/images/og-gram.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Două rucsacuri de trekking pe o pajiște, cu munți în spate">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<!-- data-header="simple": header fără meniu, ca să nu distragă -->
+<body data-page="checkout" data-header="simple">
+  <a class="skip-link" href="#main">Sari la conținut</a>
+
+  <header id="site-header"></header>
+
+  <main id="main">
+    <div class="container">
+
+      <div class="page-head">
+        <h1>Finalizează comanda</h1>
+      </div>
+
+      <p class="notice">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></svg>
+        Aceasta este o comandă de test. Nu se face nicio plată.
+      </p>
+
+      <div class="checkout-layout section">
+
+        <!-- Mobil: sumarul comenzii, pliabil, deasupra formularului -->
+        <details class="summary-mobile">
+          <summary>
+            Sumarul comenzii
+            <span class="summary-mobile-total" id="summary-mobile-total"></span>
+          </summary>
+          <div class="summary-mobile-body" id="summary-mobile-body"></div>
+        </details>
+
+        <!-- novalidate: verificarea o face main.js, cu mesaje în română sub fiecare câmp -->
+        <form class="checkout-form" id="checkout-form" action="confirmare.html" novalidate>
+
+          <!-- 1. Contact -->
+          <div class="checkout-step">
+            <fieldset>
+              <legend><span class="step-num">1</span>Contact</legend>
+              <div class="form-stack">
+                <div class="field">
+                  <label class="field-label" for="email">E-mail</label>
+                  <input class="input" id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-hint email-error">
+                  <p class="field-hint" id="email-hint">Aici ai primi confirmarea comenzii.</p>
+                  <p class="field-error" id="email-error" hidden></p>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="phone">Telefon <span class="optional">(opțional)</span></label>
+                  <input class="input" id="phone" name="phone" type="tel" autocomplete="tel" aria-describedby="phone-hint phone-error">
+                  <p class="field-hint" id="phone-hint">Doar pentru curier, dacă are nevoie să te sune.</p>
+                  <p class="field-error" id="phone-error" hidden></p>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- 2. Livrare -->
+          <div class="checkout-step">
+            <fieldset>
+              <legend><span class="step-num">2</span>Livrare</legend>
+              <div class="form-stack">
+                <div class="field">
+                  <label class="field-label" for="family-name">Nume</label>
+                  <input class="input" id="family-name" name="family-name" type="text" autocomplete="family-name" required aria-describedby="family-name-error">
+                  <p class="field-error" id="family-name-error" hidden></p>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="given-name">Prenume</label>
+                  <input class="input" id="given-name" name="given-name" type="text" autocomplete="given-name" required aria-describedby="given-name-error">
+                  <p class="field-error" id="given-name-error" hidden></p>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="city">Oraș</label>
+                  <input class="input" id="city" name="city" type="text" autocomplete="address-level2" required aria-describedby="city-error">
+                  <p class="field-error" id="city-error" hidden></p>
+                </div>
+
+                <div class="choice-group" role="radiogroup" aria-labelledby="delivery-label">
+                  <p class="choice-group-label" id="delivery-label">Metoda de livrare</p>
+                  <label class="choice">
+                    <input type="radio" name="delivery" value="curier" checked>
+                    <span>
+                      <strong>Curier</strong>
+                      <span>Coletul vine la adresa ta.</span>
+                    </span>
+                  </label>
+                  <label class="choice">
+                    <input type="radio" name="delivery" value="oficiu">
+                    <span>
+                      <strong>Ridicare din oficiu</strong>
+                      <span>Ridici coletul din oficiul curierului din orașul tău.</span>
+                    </span>
+                  </label>
+                </div>
+
+                <!-- Adresa: doar pentru livrarea prin curier (main.js o ascunde la „Ridicare din oficiu”) -->
+                <div class="form-stack" id="address-fields">
+                  <div class="field">
+                    <label class="field-label" for="address">Adresă</label>
+                    <input class="input" id="address" name="address" type="text" autocomplete="street-address" required aria-describedby="address-hint address-error">
+                    <p class="field-hint" id="address-hint">Strada, numărul, blocul și apartamentul.</p>
+                    <p class="field-error" id="address-error" hidden></p>
+                  </div>
+                  <div class="field">
+                    <label class="field-label" for="postal-code">Cod poștal</label>
+                    <input class="input input-short" id="postal-code" name="postal-code" type="text" autocomplete="postal-code" required aria-describedby="postal-code-hint postal-code-error">
+                    <p class="field-hint" id="postal-code-hint">Ex: MD-2001</p>
+                    <p class="field-error" id="postal-code-error" hidden></p>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- 3. Plată -->
+          <div class="checkout-step">
+            <fieldset>
+              <legend><span class="step-num">3</span>Plată</legend>
+              <div class="choice-group">
+                <label class="choice">
+                  <input type="radio" name="payment" value="ramburs" checked>
+                  <span>
+                    <strong>Plată la livrare (demo)</strong>
+                    <span>Într-un magazin real, ai plăti curierului la primire.</span>
+                  </span>
+                </label>
+
+                <label class="choice is-disabled">
+                  <input type="radio" name="payment" value="card" disabled>
+                  <span>
+                    <strong>Card bancar</strong>
+                    <span>Indisponibil în demo.</span>
+                  </span>
+                </label>
+
+                <!-- Câmpurile de card: vizibile, dar dezactivate -->
+                <div class="card-fields">
+                  <p class="field-hint">Plata cu cardul nu este activă în demo.</p>
+                  <div class="form-stack">
+                    <div class="field">
+                      <label class="field-label" for="cc-number">Numărul cardului</label>
+                      <input class="input" id="cc-number" name="cc-number" type="text" inputmode="numeric" autocomplete="cc-number" disabled>
+                    </div>
+                    <div class="field-row">
+                      <div class="field">
+                        <label class="field-label" for="cc-exp">Expiră (LL/AA)</label>
+                        <input class="input" id="cc-exp" name="cc-exp" type="text" inputmode="numeric" autocomplete="cc-exp" disabled>
+                      </div>
+                      <div class="field">
+                        <label class="field-label" for="cc-csc">CVC</label>
+                        <input class="input" id="cc-csc" name="cc-csc" type="text" inputmode="numeric" autocomplete="cc-csc" disabled>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="place-order">
+            <!-- Mesajul „Verifică 2 câmpuri marcate.” (aria-live: e citit cu voce) -->
+            <p class="form-status" id="form-status" aria-live="polite"></p>
+            <button class="btn btn-primary btn-block" type="submit">Plasează comanda de test</button>
+            <p>Nu se face nicio plată și datele nu sunt trimise nicăieri.</p>
+          </div>
+        </form>
+
+        <!-- Desktop: sumarul în dreapta -->
+        <aside class="box order-summary summary-desktop" aria-labelledby="summary-desktop-title">
+          <h2 id="summary-desktop-title">Sumarul comenzii</h2>
+          <div id="summary-desktop-body"></div>
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
