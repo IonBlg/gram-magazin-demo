@@ -19,7 +19,8 @@ const ICON_PATHS = {
   box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
   sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><path d="M15 4v4M9 10v4M17 16v4"/>',
   arrowLeft: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
-  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/>'
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/>',
+  chevron: '<path d="M6 9l6 6 6-6"/>'
 };
 
 // Întoarce codul SVG al unei iconițe (aria-hidden: e doar decor)
@@ -111,66 +112,180 @@ function renderHeader() {
     return;
   }
 
-  // Linkurile din meniu: cele 6 categorii + „Kit-uri”
-  const menuItems = CATEGORIES.map(c => ({ id: c.id, name: c.name }));
-  menuItems.push({ id: "kituri", name: "Kit-uri" });
-
-  const links = menuItems.map(item =>
-    `<li><a href="catalog.html?cat=${item.id}" data-cat="${item.id}">${item.name}</a></li>`
-  ).join("");
-
   header.innerHTML = `
     ${demoBarHTML()}
     <div class="site-header-inner">
       <div class="container header-main">
         <a class="logo" href="index.html">Gram</a>
 
-        <nav class="main-nav" id="main-nav" aria-label="Categorii">
-          <ul class="nav-list">${links}</ul>
+        <!-- Meniul de desktop (de la 1024px) -->
+        <nav class="desktop-nav" aria-label="Meniu principal">
+          <ul class="desktop-nav-list">
+            <li class="catalog-menu">
+              <button class="nav-item catalog-toggle" type="button" aria-expanded="false" aria-controls="catalog-panel">
+                Catalog ${icon("chevron", "icon-sm chevron")}
+              </button>
+              ${catalogPanelHTML()}
+            </li>
+            <li>
+              <a class="nav-item" href="catalog.html?cat=kituri" data-cat="kituri">
+                Kit-uri și oferte <span class="badge">${kitDiscountLabel()}</span>
+              </a>
+            </li>
+            <li><a class="nav-item" href="ghid.html" data-nav="guide">Ghid de echipament</a></li>
+          </ul>
         </nav>
 
+        <!-- Căutarea (desktop): duce la catalog.html?q=... -->
+        <form class="header-search" role="search" action="catalog.html" method="get">
+          <label class="visually-hidden" for="header-search-input">Caută produse</label>
+          <input class="input" id="header-search-input" name="q" type="search" placeholder="Caută: frontală, cană…" required>
+          <button class="header-search-submit" type="submit" aria-label="Caută">${icon("search", "icon-sm")}</button>
+        </form>
+
         <div class="header-actions">
-          <button class="icon-btn search-toggle" type="button" aria-label="Caută" aria-expanded="false" aria-controls="site-search">${icon("search")}</button>
           <a class="icon-btn cart-link" href="cos.html">
             ${icon("bag")}
             <span class="cart-count" aria-hidden="true"></span>
           </a>
-          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">
             ${icon("menu", "icon-sm")}<span>Meniu</span>
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Căutarea: un formular simplu care duce la catalog.html?q=... -->
-      <form class="search-bar" id="site-search" role="search" action="catalog.html" method="get" hidden>
-        <div class="container search-inner">
-          <label class="visually-hidden" for="search-input">Caută produse</label>
-          <input class="input" id="search-input" name="q" type="search" placeholder="Ex: rucsac, frontală, titan" required>
-          <button class="btn btn-primary" type="submit">Caută</button>
-        </div>
-      </form>
-    </div>`;
+    ${mobileMenuHTML()}`;
 
-  // Pe catalog: marcăm categoria curentă și punem textul căutat în câmp
+  // Pagina curentă în meniu + textul căutat (pe catalog)
+  updateNavCurrent(document.body.dataset.page === "catalog" ? getParam("cat") : null);
+  if (document.body.dataset.page === "guide") {
+    document.querySelectorAll('[data-nav="guide"]').forEach(link => link.setAttribute("aria-current", "page"));
+  }
   if (document.body.dataset.page === "catalog") {
-    updateNavCurrent(getParam("cat"));
-    document.getElementById("search-input").value = getParam("q") || "";
+    document.querySelectorAll('input[name="q"]').forEach(input => { input.value = getParam("q") || ""; });
   }
 
   updateCartCount();
-  setupMenuToggle();
-  setupSearchToggle();
+  setupCatalogPanel();
+  setupMobileMenu();
 }
 
-// Marchează în meniu categoria în care te afli (aria-current="page")
+// „−10%” (cea mai mare reducere dintre kit-uri)
+function kitDiscountLabel() {
+  return "−" + Math.round(Math.max(...KITS.map(k => k.discount)) * 100) + "%";
+}
+
+// Numărul de produse și greutatea minimă dintr-o categorie (calculate din PRODUCTS)
+function categoryInfo(category) {
+  const products = getProductsInCategory(category.id);
+  return {
+    count: products.length,
+    minWeight: Math.min(...products.map(getMinWeight)),
+    image: products[0].images[0]
+  };
+}
+
+// Panoul care se deschide sub „Catalog ▾” (desktop)
+function catalogPanelHTML() {
+  const categories = CATEGORIES.map(category => {
+    const info = categoryInfo(category);
+    return `
+      <li>
+        <a class="panel-cat" href="catalog.html?cat=${category.id}">
+          <img src="${info.image}" alt="" width="48" height="60" loading="lazy">
+          <span>
+            <span class="panel-cat-name">${category.name}</span>
+            <span class="panel-cat-meta">${countLabel(info.count, "produs", "produse")} · de la ${showWeight(info.minWeight)}</span>
+          </span>
+        </a>
+      </li>`;
+  }).join("");
+
+  const lightCount = PRODUCTS.filter(p => getMinWeight(p) < 100).length;
+
+  return `
+    <div class="catalog-panel" id="catalog-panel" hidden>
+      <div class="container catalog-panel-inner">
+        <div class="catalog-panel-main">
+          <p class="eyebrow">Categorii</p>
+          <ul class="panel-cats">${categories}</ul>
+          <a class="panel-all" href="catalog.html">Toate produsele (${PRODUCTS.length}) <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="catalog-panel-side">
+          <p class="eyebrow">Scurtături</p>
+          <ul class="panel-shortcuts">
+            <li><a href="catalog.html?light=1">Sub 100 g <span class="panel-count">· ${lightCount}</span></a></li>
+            <li><a href="catalog.html?trip=o-zi">Pentru tura de o zi</a></li>
+            <li><a href="catalog.html?trip=mai-multe-zile">Pentru mai multe zile</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Meniul de telefon / tabletă: un <dialog> pe tot ecranul
+// (browserul se ocupă de Escape, de focus și de fundalul blocat)
+function mobileMenuHTML() {
+  const categories = CATEGORIES.map(category => `
+    <li>
+      <a href="catalog.html?cat=${category.id}" data-cat="${category.id}">
+        <span>${category.name}</span>
+        <span class="mobile-cat-count">${categoryInfo(category).count}</span>
+      </a>
+    </li>`).join("");
+
+  return `
+    <dialog class="mobile-menu" id="mobile-menu" aria-label="Meniu">
+      <div class="container mobile-menu-head">
+        <a class="logo" href="index.html">Gram</a>
+        <button class="menu-toggle menu-close" type="button">${icon("close", "icon-sm")}<span>Închide</span></button>
+      </div>
+
+      <div class="container mobile-menu-body">
+        <form class="mobile-search" role="search" action="catalog.html" method="get">
+          <label class="visually-hidden" for="mobile-search-input">Caută produse</label>
+          <input class="input" id="mobile-search-input" name="q" type="search" placeholder="Caută: frontală, cană…" required>
+          <button class="btn btn-primary" type="submit">Caută</button>
+        </form>
+
+        <p class="eyebrow mobile-menu-title">Categorii</p>
+        <ul class="mobile-cats">${categories}</ul>
+        <a class="mobile-all" href="catalog.html">Toate produsele (${PRODUCTS.length}) <span aria-hidden="true">→</span></a>
+
+        <ul class="mobile-main-links">
+          <li><a href="catalog.html?cat=kituri" data-cat="kituri">Kit-uri și oferte <span class="badge">${kitDiscountLabel()}</span></a></li>
+          <li><a href="ghid.html" data-nav="guide">Ghid de echipament</a></li>
+        </ul>
+
+        <ul class="mobile-meta-links">
+          <li><a href="#livrare-retur" data-scroll-to="livrare-retur">Livrare și retur</a></li>
+          <li><a href="credite.html">Credite foto</a></li>
+          <li>
+            <a href="https://github.com/IonBlg/gram-magazin-demo" target="_blank" rel="noopener">
+              GitHub <span aria-hidden="true">↗</span><span class="visually-hidden"> (se deschide într-un tab nou)</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </dialog>`;
+}
+
+// Marchează pagina curentă: categoria / „Kit-uri și oferte” (aria-current)
+// și butonul „Catalog ▾” pe orice pagină de catalog în afară de kit-uri
 function updateNavCurrent(catId) {
-  document.querySelectorAll(".nav-list a").forEach(link => {
+  document.querySelectorAll("#site-header a[data-cat]").forEach(link => {
     if (link.dataset.cat === catId) {
       link.setAttribute("aria-current", "page");
     } else {
       link.removeAttribute("aria-current");
     }
   });
+
+  const toggle = document.querySelector(".catalog-toggle");
+  if (toggle) {
+    toggle.classList.toggle("is-current", document.body.dataset.page === "catalog" && catId !== "kituri");
+  }
 }
 
 // Numărul de lângă coș (din localStorage, prin cart.js)
@@ -183,30 +298,68 @@ function updateCartCount() {
   link.setAttribute("aria-label", "Coșul de cumpărături, " + countLabel(count, "articol", "articole"));
 }
 
-// Butonul de căutare deschide/închide bara de căutare
-function setupSearchToggle() {
-  const button = document.querySelector(".search-toggle");
-  const bar = document.getElementById("site-search");
+// Panoul „Catalog”: se deschide la click / Enter / Space (nu la hover),
+// se închide cu Escape, la click în afară și când focusul iese din el
+function setupCatalogPanel() {
+  const wrapper = document.querySelector(".catalog-menu");
+  const button = wrapper.querySelector(".catalog-toggle");
+  const panel = document.getElementById("catalog-panel");
 
-  button.addEventListener("click", () => {
-    bar.hidden = !bar.hidden;
-    button.setAttribute("aria-expanded", !bar.hidden);
-    if (!bar.hidden) document.getElementById("search-input").focus();
+  const setOpen = isOpen => {
+    panel.hidden = !isOpen;
+    button.setAttribute("aria-expanded", isOpen);
+  };
+
+  button.addEventListener("click", () => setOpen(panel.hidden));
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !panel.hidden) {
+      setOpen(false);
+      button.focus(); // focusul revine pe „Catalog”
+    }
+  });
+
+  // Click oriunde în afara butonului și a panoului
+  document.addEventListener("click", event => {
+    if (!panel.hidden && !wrapper.contains(event.target)) setOpen(false);
+  });
+
+  // Tab în afara butonului + panoului
+  wrapper.addEventListener("focusout", event => {
+    if (!panel.hidden && event.relatedTarget && !wrapper.contains(event.relatedTarget)) setOpen(false);
   });
 }
 
-// Butonul „Meniu” de pe mobil deschide/închide lista de categorii
-function setupMenuToggle() {
-  const button = document.querySelector(".menu-toggle");
-  const nav = document.getElementById("main-nav");
-  if (!button || !nav) return;
+// Meniul de telefon: „Meniu” îl deschide, „Închide” / Escape îl închid
+function setupMobileMenu() {
+  const openButton = document.querySelector(".header-actions .menu-toggle");
+  const menu = document.getElementById("mobile-menu");
 
-  button.addEventListener("click", () => {
-    const isOpen = nav.classList.toggle("is-open");
-    button.setAttribute("aria-expanded", isOpen);
-    button.innerHTML = isOpen
-      ? `${icon("close", "icon-sm")}<span>Închide</span>`
-      : `${icon("menu", "icon-sm")}<span>Meniu</span>`;
+  openButton.addEventListener("click", () => {
+    menu.showModal();
+    openButton.setAttribute("aria-expanded", "true");
+  });
+
+  menu.querySelector(".menu-close").addEventListener("click", () => menu.close());
+
+  // La închidere (și cu Escape) browserul pune focusul înapoi pe „Meniu”
+  menu.addEventListener("close", () => openButton.setAttribute("aria-expanded", "false"));
+
+  // Un click pe un link închide meniul; „Livrare și retur” derulează la subsol
+  menu.addEventListener("click", event => {
+    const link = event.target.closest("a");
+    if (!link) return;
+    menu.close();
+
+    if (link.dataset.scrollTo) {
+      event.preventDefault(); // fără „#” în adresă (pe 404, <base> ar trimite la Acasă)
+      document.getElementById(link.dataset.scrollTo).scrollIntoView();
+    }
+  });
+
+  // Dacă fereastra se lărgește la desktop cu meniul deschis, îl închidem
+  window.matchMedia("(min-width: 1024px)").addEventListener("change", event => {
+    if (event.matches && menu.open) menu.close();
   });
 }
 
@@ -241,11 +394,15 @@ function renderFooter() {
             <h2 class="eyebrow footer-title">Magazin</h2>
             <ul class="footer-list footer-list-columns">
               ${shopLinks}
-              <li><a href="catalog.html?cat=kituri">Kit-uri</a></li>
+            </ul>
+            <!-- Sub categorii, pe toată lățimea coloanei (nu se mai rup pe rând) -->
+            <ul class="footer-list footer-list-extra">
+              <li><a href="catalog.html?cat=kituri">Kit-uri și oferte</a></li>
+              <li><a href="ghid.html">Ghid de echipament</a></li>
             </ul>
           </nav>
 
-          <div>
+          <div id="livrare-retur">
             <h2 class="eyebrow footer-title">Ajutor</h2>
             <p class="footer-text"><strong>Livrare</strong> gratuită de la ${showPrice(SHOP.freeShippingFrom)}, altfel ${showPrice(SHOP.shippingCost)}.</p>
             <p class="footer-text"><strong>Retur</strong> în ${countLabel(SHOP.returnDays, "zi", "zile")} de la primire.</p>
@@ -1185,26 +1342,38 @@ function createCartDrawer() {
 }
 
 // Deschide sertarul și arată rândul din coș cu cheia `key`
-function openCartDrawer(key) {
+// Deschide sertarul și arată rândul (sau rândurile) din coș cu cheile date.
+// keys = o cheie (de pe pagina de produs) sau o listă de chei (din ghid).
+function openCartDrawer(keys) {
   const drawer = document.getElementById("cart-drawer") || createCartDrawer();
+  const keyList = Array.isArray(keys) ? keys : [keys];
   const lines = getCartLines(loadCart());
-  const line = lines.find(l => l.key === key);
+  const added = keyList.map(key => lines.find(l => l.key === key)).filter(Boolean);
   const totals = getCartTotals(lines);
-  const options = lineOptionsText(line);
 
-  const maxNote = line.quantity >= MAX_QUANTITY
+  // Titlul: „Adăugat în coș” sau „Adăugate în coș (5)”
+  document.getElementById("drawer-title").textContent =
+    added.length > 1 ? `Adăugate în coș (${added.length})` : "Adăugat în coș";
+
+  const items = added.map(line => {
+    const options = lineOptionsText(line);
+    return `
+      <li class="drawer-item">
+        ${thumbHTML(line)}
+        <div>
+          <p class="drawer-item-name">${line.name}</p>
+          ${options ? `<p class="drawer-item-meta">${options}</p>` : ""}
+          <p class="drawer-item-meta">În coș: ${line.quantity} buc. · ${showPrice(line.lineTotal)}</p>
+        </div>
+      </li>`;
+  }).join("");
+
+  const maxNote = added.some(line => line.quantity >= MAX_QUANTITY)
     ? `<p class="drawer-note">Poți avea maximum ${MAX_QUANTITY} bucăți din același produs.</p>`
     : "";
 
   document.getElementById("drawer-body").innerHTML = `
-    <div class="drawer-item">
-      ${thumbHTML(line)}
-      <div>
-        <p class="drawer-item-name">${line.name}</p>
-        ${options ? `<p class="drawer-item-meta">${options}</p>` : ""}
-        <p class="drawer-item-meta">În coș: ${line.quantity} buc. · ${showPrice(line.lineTotal)}</p>
-      </div>
-    </div>
+    <ul class="drawer-items">${items}</ul>
     ${maxNote}
     <dl class="summary-list">
       <div><dt>Coșul tău</dt><dd>${countLabel(totals.count, "articol", "articole")}</dd></div>
@@ -1605,7 +1774,232 @@ function initConfirmation() {
 }
 
 
-/* ---------- 14. Pornire ---------- */
+/* ---------- 14. Pagina „Ghid de echipament” ---------- */
+
+// Cele două liste. Produsele vin din products.js (nimic nou inventat);
+// „what” = ce iei, „why” = un sfat scurt și general.
+const GUIDE_LISTS = [
+  {
+    id: "o-zi",
+    name: "Tură de o zi",
+    items: [
+      { productId: "rucsac-creasta", what: "Rucsac", why: "Încape tot ce ai nevoie pentru o zi, iar mâinile rămân libere." },
+      { productId: "filtru-izvor", what: "Apă", why: "Poți umple apa la izvoare, fără să cari toată cantitatea de acasă." },
+      { productId: "frontala-licar", what: "Lumină", why: "Lumina naturală se termină mai devreme decât crezi." },
+      { productId: "trusa-prim-ajutor", what: "Prim ajutor", why: "O bășică sau o zgârietură se rezolvă mai ușor pe loc." },
+      { productId: "busola-nord", what: "Orientare", why: "Telefonul se poate descărca sau poate rămâne fără semnal." },
+      { productId: "set-urgenta", what: "Urgență", why: "Un fluier se aude mai departe decât vocea, iar pătura te ajută să-ți păstrezi căldura." }
+    ]
+  },
+  {
+    id: "mai-multe-zile",
+    name: "Mai multe zile",
+    items: [
+      { productId: "rucsac-popas", what: "Rucsac mare", why: "Încap hainele, mâncarea și echipamentul pentru câteva zile." },
+      { productId: "filtru-izvor", what: "Apă — filtru", why: "Pe mai multe zile nu poți căra toată apa de la început." },
+      { productId: "rezervor-hidratare", what: "Apă — rezervor", why: "Ai o rezervă de apă la îndemână, direct din rucsac." },
+      { productId: "frontala-licar", what: "Lumină pe traseu", why: "Lumina naturală se termină mai devreme decât crezi." },
+      { productId: "felinar-vatra", what: "Lumină în tabără", why: "Luminează cortul fără să-ți ocupe mâinile." },
+      { productId: "arzator-flacara", what: "Gătit — arzător", why: "O masă caldă ajută după o zi lungă de mers." },
+      { productId: "cana-titan", what: "Gătit — cană", why: "Încălzești apa și mănânci din același vas." },
+      { productId: "spork-titan", what: "Tacâm", why: "Un singur obiect în loc de lingură și furculiță." },
+      { productId: "trusa-prim-ajutor", what: "Prim ajutor", why: "Pe mai multe zile, ajutorul poate fi mai departe." },
+      { productId: "busola-nord", what: "Orientare", why: "Telefonul se poate descărca sau poate rămâne fără semnal." },
+      { productId: "set-urgenta", what: "Urgență", why: "Un fluier se aude mai departe decât vocea, iar pătura te ajută să-ți păstrezi căldura." },
+      { productId: "bete-carbon-duo", what: "Bețe", why: "Te ajută la echilibru și la coborâri, mai ales cu rucsac greu." }
+    ]
+  }
+];
+
+const GUIDE_KEY = "gram-ghid"; // bifele, salvate în localStorage
+
+// Varianta cea mai ușoară a unui produs
+function getLightestVariant(product) {
+  return product.variants.reduce((min, v) => (v.weight < min.weight ? v : min));
+}
+
+// Bifele salvate: { "o-zi": { "rucsac-creasta": true, ... }, ... }
+function loadGuideChecks() {
+  try {
+    return JSON.parse(localStorage.getItem(GUIDE_KEY)) || {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveGuideChecks(checks) {
+  try {
+    localStorage.setItem(GUIDE_KEY, JSON.stringify(checks));
+  } catch (error) {
+    // fără stocare, bifele țin doar până la reîncărcare
+  }
+}
+
+// Un produs e bifat dacă nu a fost debifat (la prima vizită, totul e bifat)
+function isGuideChecked(checks, listId, productId) {
+  return !checks[listId] || checks[listId][productId] !== false;
+}
+
+function initGuide() {
+  const checks = loadGuideChecks();
+
+  document.getElementById("guide-tabs").innerHTML = GUIDE_LISTS.map((list, i) => `
+    <button class="guide-tab" type="button" role="tab" id="tab-${list.id}"
+      aria-controls="panel-${list.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">
+      ${list.name}
+    </button>`).join("");
+
+  document.getElementById("guide-panels").innerHTML = GUIDE_LISTS.map((list, i) =>
+    guidePanelHTML(list, checks, i === 0)
+  ).join("");
+
+  GUIDE_LISTS.forEach(list => updateGuideTotal(list));
+  setupGuideTabs();
+
+  const panels = document.getElementById("guide-panels");
+
+  // Bifă / debifă → salvăm și recalculăm totalul
+  panels.addEventListener("change", event => {
+    const box = event.target.closest("input[data-product]");
+    if (!box) return;
+    const current = loadGuideChecks();
+    current[box.dataset.list] = current[box.dataset.list] || {};
+    current[box.dataset.list][box.dataset.product] = box.checked;
+    saveGuideChecks(current);
+    updateGuideTotal(GUIDE_LISTS.find(l => l.id === box.dataset.list));
+  });
+
+  // „Adaugă produsele bifate în coș”
+  panels.addEventListener("click", event => {
+    const button = event.target.closest("[data-add-list]");
+    if (button) addGuideListToCart(GUIDE_LISTS.find(l => l.id === button.dataset.addList));
+  });
+}
+
+// Un tab: tabelul-checklist + totalul + butonul
+function guidePanelHTML(list, checks, isActive) {
+  const rows = list.items.map(item => {
+    const product = getProduct(item.productId);
+    const variant = getLightestVariant(product);
+    const boxId = `g-${list.id}-${product.id}`;
+    const label = product.variants.length > 1 ? product.name + " · " + variant.label : product.name;
+    const soldOut = product.inStock ? "" : ' <span class="badge badge-dark">Stoc epuizat</span>';
+
+    return `
+      <tr>
+        <td class="guide-check">
+          <input type="checkbox" id="${boxId}" data-list="${list.id}" data-product="${product.id}"
+            ${isGuideChecked(checks, list.id, product.id) ? "checked" : ""}>
+        </td>
+        <th class="guide-what" scope="row"><label for="${boxId}">${item.what}</label></th>
+        <td class="guide-why">${item.why}</td>
+        <td class="guide-product"><a href="produs.html?id=${product.id}">${label}</a>${soldOut}</td>
+        <td class="guide-weight">${showWeight(variant.weight)}</td>
+      </tr>`;
+  }).join("");
+
+  return `
+    <div class="guide-panel" role="tabpanel" id="panel-${list.id}" aria-labelledby="tab-${list.id}"${isActive ? "" : " hidden"}>
+      <table class="guide-table">
+        <caption class="visually-hidden">Lista pentru: ${list.name}</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Iau</span></th>
+            <th scope="col">Ce iei</th>
+            <th scope="col">De ce</th>
+            <th scope="col">Produsul recomandat</th>
+            <th scope="col" class="guide-weight">Greutate</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="guide-summary">
+        <p class="guide-total">
+          <span class="eyebrow">Greutate totală</span>
+          <strong id="guide-total-${list.id}"></strong>
+          <span class="guide-count" id="guide-count-${list.id}"></span>
+        </p>
+        <button class="btn btn-primary" type="button" data-add-list="${list.id}">Adaugă produsele bifate în coș</button>
+      </div>
+      <p class="guide-status" id="guide-status-${list.id}" aria-live="polite"></p>
+    </div>`;
+}
+
+// Totalul se calculează doar din rândurile bifate
+function updateGuideTotal(list) {
+  const checks = loadGuideChecks();
+  const checked = list.items.filter(item => isGuideChecked(checks, list.id, item.productId));
+  const weight = checked.reduce((sum, item) => sum + getLightestVariant(getProduct(item.productId)).weight, 0);
+
+  document.getElementById("guide-total-" + list.id).textContent = showWeight(weight);
+  document.getElementById("guide-count-" + list.id).textContent =
+    `${checked.length} din ${list.items.length} bifate`;
+}
+
+// Adaugă în coș produsele bifate care sunt în stoc, apoi deschide sertarul
+function addGuideListToCart(list) {
+  const checks = loadGuideChecks();
+  const status = document.getElementById("guide-status-" + list.id);
+  const checked = list.items.filter(item => isGuideChecked(checks, list.id, item.productId));
+  const keys = [];
+  const skipped = [];
+
+  checked.forEach(item => {
+    const product = getProduct(item.productId);
+    if (!product.inStock) {
+      skipped.push(product.name);
+      return;
+    }
+    const color = product.colors.length > 0 ? product.colors[0].id : null;
+    keys.push(addProductToCart(product.id, getLightestVariant(product).id, color, 1));
+  });
+
+  status.textContent = skipped.length > 0
+    ? "Nu sunt în stoc și nu au fost adăugate: " + skipped.join(", ") + "."
+    : "";
+
+  if (keys.length === 0) {
+    if (!status.textContent) status.textContent = "Bifează cel puțin un produs.";
+    return;
+  }
+
+  updateCartCount();
+  openCartDrawer(keys);
+}
+
+// Tab-urile: click, săgețile ← →, Home și End
+function setupGuideTabs() {
+  const tabs = [...document.querySelectorAll(".guide-tab")];
+
+  const select = tab => {
+    tabs.forEach(t => {
+      const active = t === tab;
+      t.setAttribute("aria-selected", active);
+      t.tabIndex = active ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !active;
+    });
+    tab.focus();
+  };
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener("click", () => select(tab));
+    tab.addEventListener("keydown", event => {
+      let next = null;
+      if (event.key === "ArrowRight") next = tabs[(i + 1) % tabs.length];
+      if (event.key === "ArrowLeft") next = tabs[(i - 1 + tabs.length) % tabs.length];
+      if (event.key === "Home") next = tabs[0];
+      if (event.key === "End") next = tabs[tabs.length - 1];
+      if (next) {
+        event.preventDefault();
+        select(next);
+      }
+    });
+  });
+}
+
+
+/* ---------- 15. Pornire ---------- */
 
 // Scripturile sunt la finalul <body>, deci pagina e deja încărcată.
 renderHeader();
@@ -1621,3 +2015,4 @@ if (page === "product") initProduct();
 if (page === "cart") initCart();
 if (page === "checkout") initCheckout();
 if (page === "confirmation") initConfirmation();
+if (page === "guide") initGuide();

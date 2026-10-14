@@ -32,6 +32,7 @@ HTML, CSS și JavaScript **vanilla** — fără framework-uri, fără npm, făr�
 ├── cos.html          Coșul
 ├── checkout.html     Checkout demo
 ├── confirmare.html   Comanda plasată
+├── ghid.html         Ghid de echipament (listă cu bife, greutate totală)
 ├── credite.html      Autorii pozelor
 ├── 404.html          Pagina „nu există”
 ├── css/style.css     Tot stilul, un singur fișier

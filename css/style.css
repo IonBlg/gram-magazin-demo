@@ -441,7 +441,7 @@ h3 {
   text-align: center;
 }
 
-/* Butonul „Meniu” (doar pe mobil) */
+/* Butonul „Meniu” (sub 1024px) și „Închide” din meniul de telefon */
 .menu-toggle {
   display: inline-flex;
   align-items: center;
@@ -454,40 +454,10 @@ h3 {
   font-weight: 600;
 }
 
-/* Pe mobil meniul e ascuns până apeși „Meniu” */
-.main-nav {
+/* Meniul de desktop și căutarea vizibilă: ascunse sub 1024px */
+.desktop-nav,
+.header-search {
   display: none;
-  order: 3;
-  width: 100%;
-  border-top: 1px solid var(--line);
-}
-
-.main-nav.is-open {
-  display: block;
-}
-
-.nav-list a {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
-  border-bottom: 1px solid var(--line);
-  font-weight: 500;
-  text-decoration: none;
-  transition: color var(--speed), border-color var(--speed);
-}
-
-.nav-list li:last-child a {
-  border-bottom: 0;
-}
-
-.nav-list a:hover {
-  color: var(--accent);
-}
-
-/* Categoria în care te afli */
-.nav-list a[aria-current="page"] {
-  color: var(--accent);
-  font-weight: 600;
 }
 
 /* Header simplificat (checkout) */
@@ -495,44 +465,315 @@ h3 {
   justify-content: space-between;
 }
 
-@media (min-width: 768px) {
-  .menu-toggle {
+/* Header-ul e reperul pentru panoul „Catalog” (care se deschide sub el) */
+.site-header-inner {
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .header-actions .menu-toggle {
     display: none;
   }
 
-  .main-nav {
+  .desktop-nav {
     display: block;
-    order: 0;
-    width: auto;
-    margin-left: var(--space-5);
-    border-top: 0;
+    margin-left: var(--space-6);
   }
 
-  .nav-list {
+  .desktop-nav-list {
     display: flex;
-    gap: var(--space-1);
+    align-items: center;
+    gap: var(--space-2);
   }
 
-  .nav-list a {
+  /* „Catalog ▾”, „Kit-uri și oferte”, „Ghid de echipament” */
+  .nav-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     min-height: 44px;
     padding: 0 var(--space-2);
-    border-bottom: 2px solid transparent;
-    font-size: 15px;
-  }
-
-  .nav-list li:last-child a {
-    border-bottom: 2px solid transparent;
-  }
-
-  .nav-list a:hover {
+    background: transparent;
+    border: 0;
+    border-bottom: 3px solid transparent;
     color: var(--ink);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--speed), border-color var(--speed);
+  }
+
+  .nav-item:hover {
     border-bottom-color: var(--ink);
   }
 
-  .nav-list a[aria-current="page"],
-  .nav-list li:last-child a[aria-current="page"] {
+  /* Pagina curentă: portocaliu + linie de 3px */
+  .nav-item[aria-current="page"],
+  .nav-item.is-current {
+    color: var(--accent);
     border-bottom-color: var(--accent);
   }
+
+  .nav-item .badge {
+    font-size: 11px;
+  }
+
+  /* Săgeata ▾ se rotește când panoul e deschis */
+  .chevron {
+    transition: transform 150ms;
+  }
+
+  .catalog-toggle[aria-expanded="true"] .chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Căutarea vizibilă (~220px), cu lupa în dreapta câmpului */
+  .header-search {
+    display: block;
+    position: relative;
+    width: 220px;
+    margin-left: auto;
+  }
+
+  .header-search .input {
+    min-height: 44px;
+    padding-right: 44px;
+    font-size: 15px;
+  }
+
+  .header-search-submit {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: var(--ink);
+  }
+
+  .header-search + .header-actions {
+    margin-left: var(--space-2);
+  }
+}
+
+
+/* ----- Panoul „Catalog” (desktop) ----- */
+
+.catalog-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 40;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.catalog-panel-inner {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+}
+
+.catalog-panel-main {
+  padding: var(--space-5) var(--space-6) var(--space-5) 0;
+}
+
+.panel-cats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-3);
+}
+
+.panel-cat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  margin-left: calc(var(--space-2) * -1);
+  text-decoration: none;
+  transition: background-color var(--speed);
+}
+
+.panel-cat:hover {
+  background: var(--bg);
+}
+
+.panel-cat img {
+  width: 48px;
+  height: 60px;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--placeholder);
+}
+
+.panel-cat-name {
+  display: block;
+  font-weight: 600;
+}
+
+.panel-cat-meta {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.panel-all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  width: 100%;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.panel-all:hover {
+  color: var(--accent);
+}
+
+/* Dreapta: „Scurtături”, pe fundalul paginii */
+.catalog-panel-side {
+  padding: var(--space-5);
+  background: var(--bg);
+}
+
+.panel-shortcuts {
+  margin-top: var(--space-3);
+}
+
+.panel-shortcuts a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-shortcuts a:hover {
+  color: var(--accent);
+}
+
+.panel-count {
+  margin-left: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+
+/* ----- Meniul de telefon / tabletă (<dialog> pe tot ecranul) ----- */
+
+.mobile-menu {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0 0 var(--space-7);
+  background: var(--bg);
+  border: 0;
+  color: var(--ink);
+  overflow-y: auto;
+}
+
+.mobile-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mobile-menu-body {
+  padding-top: var(--space-5);
+}
+
+.mobile-search {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mobile-search .input {
+  min-height: 52px;
+}
+
+.mobile-menu-title {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-1);
+}
+
+.mobile-cats a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 48px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.mobile-cat-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.mobile-menu a[aria-current="page"] {
+  color: var(--accent);
+}
+
+.mobile-all {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  border-bottom: 2px solid var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mobile-main-links {
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.mobile-main-links a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mobile-meta-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-5);
+  padding-top: var(--space-2);
+  font-size: 14px;
+}
+
+.mobile-meta-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  color: var(--ink-2);
 }
 
 
@@ -654,6 +895,12 @@ ul.footer-stats {
 
 .footer-list-columns li {
   break-inside: avoid;
+}
+
+.footer-list-extra {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid rgba(244, 242, 238, 0.15);
 }
 
 .footer-text {
@@ -2359,21 +2606,7 @@ ul.footer-stats {
 }
 
 
-/* ---------- 22. Bara de căutare (header) ---------- */
-
-.search-bar {
-  padding-block: var(--space-3);
-  border-top: 1px solid var(--line);
-}
-
-.search-inner {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.search-inner .input {
-  min-height: 52px;
-}
+/* ---------- 22. Catalog: căutare și „Niciun produs” ---------- */
 
 /* „Rezultate pentru „titan” · Șterge căutarea” (catalog) */
 .catalog-search {
@@ -2412,7 +2645,7 @@ ul.footer-stats {
 }
 
 /* Cât timp sertarul e deschis, pagina din spate nu se derulează */
-body:has(.drawer[open]) {
+body:has(dialog[open]) {
   overflow: hidden;
 }
 
@@ -2442,6 +2675,12 @@ body:has(.drawer[open]) {
   gap: var(--space-5);
   padding: var(--space-5);
   overflow-y: auto;
+}
+
+.drawer-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .drawer-item {
@@ -2793,6 +3032,239 @@ body:has(.drawer[open]) {
 
 .order-item .thumb-mosaic {
   width: 56px;
+}
+
+
+/* ---------- 29. Pagina „Ghid de echipament” ---------- */
+
+.guide-intro {
+  max-width: 44rem;
+  margin-top: var(--space-3);
+  color: var(--ink-2);
+  font-size: 1.0625rem;
+}
+
+/* Tab-urile */
+.guide-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  border-bottom: 2px solid var(--ink);
+}
+
+.guide-tab {
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color var(--speed), background-color var(--speed);
+}
+
+.guide-tab:hover {
+  color: var(--ink);
+}
+
+.guide-tab[aria-selected="true"] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Tabelul-checklist */
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 0;
+}
+
+.guide-table th,
+.guide-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.guide-table thead th {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.guide-check {
+  width: 44px;
+}
+
+.guide-check input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+.guide-what {
+  font-weight: 600;
+  white-space: nowrap; /* „Prim ajutor” rămâne pe un rând */
+}
+
+.guide-table thead th {
+  white-space: nowrap;
+}
+
+.guide-product {
+  text-wrap: balance;
+}
+
+.guide-why {
+  text-wrap: pretty;
+}
+
+.guide-what label {
+  cursor: pointer;
+}
+
+.guide-why {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.guide-product a {
+  font-weight: 500;
+}
+
+.guide-product .badge {
+  margin-left: var(--space-2);
+}
+
+.guide-table .guide-weight {
+  font-family: var(--font-mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Rândul debifat: estompat */
+.guide-table tr:has(input:not(:checked)) td:not(.guide-check),
+.guide-table tr:has(input:not(:checked)) th {
+  opacity: 0.55;
+}
+
+/* Totalul + butonul */
+.guide-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--ink);
+}
+
+.guide-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.guide-total .eyebrow {
+  width: 100%;
+}
+
+.guide-total strong {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.guide-count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.guide-status {
+  margin-top: var(--space-2);
+  font-size: 14px;
+  color: var(--accent-dark);
+}
+
+.guide-status:empty {
+  display: none;
+}
+
+/* Sfaturi de siguranță + linkul spre kit */
+.guide-safety {
+  margin-top: var(--space-7);
+  max-width: 44rem;
+}
+
+.guide-safety h2 {
+  margin-bottom: var(--space-3);
+  font-size: 1.375rem;
+}
+
+/* ul.… ca să câștige în fața regulii ul[class] (care scoate bulinele) */
+ul.guide-safety-list {
+  padding-left: 1.25em;
+  list-style: square;
+}
+
+.guide-safety-list li + li {
+  margin-top: var(--space-2);
+}
+
+.guide-kit-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-block: var(--space-6) var(--space-7);
+}
+
+/* Pe telefon: fiecare rând din tabel devine o „fișă” */
+@media (max-width: 767px) {
+  .guide-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .guide-table tr {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check what weight"
+      "check why why"
+      "check product product";
+    gap: var(--space-1) 0;
+    padding: var(--space-3) var(--space-3) var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .guide-table th,
+  .guide-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .guide-check { grid-area: check; display: flex; justify-content: center; padding-top: 2px; }
+  .guide-what { grid-area: what; }
+  .guide-table .guide-weight { grid-area: weight; }
+  .guide-why { grid-area: why; }
+  .guide-product { grid-area: product; }
 }
 
 
