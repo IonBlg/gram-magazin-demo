@@ -170,6 +170,8 @@ function renderHeader() {
         </form>
 
         <div class="header-actions">
+          <!-- Lupa: doar sub 1024px (pe desktop căutarea e mereu vizibilă) -->
+          <button class="icon-btn search-toggle" type="button" aria-label="Caută" aria-expanded="false" aria-controls="search-bar">${icon("search")}</button>
           <a class="icon-btn cart-link" href="cos.html">
             ${icon("bag")}
             <span class="cart-count" aria-hidden="true"></span>
@@ -179,6 +181,16 @@ function renderHeader() {
           </button>
         </div>
       </div>
+
+      <!-- Rândul de căutare de sub header (telefon / tabletă), deschis de lupă -->
+      <form class="search-bar" id="search-bar" role="search" action="catalog.html" method="get" hidden>
+        <div class="container search-bar-inner">
+          <label class="visually-hidden" for="bar-search-input">Caută produse</label>
+          <input class="input" id="bar-search-input" name="q" type="search" placeholder="Caută: frontală, cană…" required>
+          <button class="btn btn-primary" type="submit">Caută</button>
+          <button class="icon-btn search-close" type="button" aria-label="Închide căutarea">${icon("close")}</button>
+        </div>
+      </form>
     </div>
 
     ${mobileMenuHTML()}`;
@@ -195,6 +207,31 @@ function renderHeader() {
   updateCartCount();
   setupCatalogPanel();
   setupMobileMenu();
+  setupSearchBar();
+}
+
+// Lupa de pe telefon: deschide rândul de căutare cu focus în câmp;
+// se închide cu × sau Escape, iar focusul revine pe lupă
+function setupSearchBar() {
+  const toggle = document.querySelector(".search-toggle");
+  const bar = document.getElementById("search-bar");
+  const input = document.getElementById("bar-search-input");
+
+  const setOpen = isOpen => {
+    bar.hidden = !isOpen;
+    toggle.setAttribute("aria-expanded", isOpen);
+    if (isOpen) {
+      input.focus();
+    } else {
+      toggle.focus();
+    }
+  };
+
+  toggle.addEventListener("click", () => setOpen(bar.hidden));
+  bar.querySelector(".search-close").addEventListener("click", () => setOpen(false));
+  bar.addEventListener("keydown", event => {
+    if (event.key === "Escape") setOpen(false);
+  });
 }
 
 // „−10%” (cea mai mare reducere dintre kit-uri)
@@ -560,6 +597,8 @@ function kitCard(kit) {
       <div class="kit-body">
         <p class="eyebrow">Kit · −${discountPercent}%</p>
         <h3>${kit.name}</h3>
+        <!-- Doar pe telefon (cardul compact): „4 produse · 1,22 kg” -->
+        <p class="kit-meta">${countLabel(kit.items.length, "produs", "produse")} · ${showWeight(totals.weight)}</p>
         <p class="kit-short">${kit.short}</p>
         <ul class="kit-items">${itemRows}</ul>
         <div class="kit-totals">
@@ -1203,17 +1242,29 @@ function addCurrentProductToCart() {
   openCartDrawer(key);
 }
 
-// Bara de jos apare doar cât timp butonul principal NU e pe ecran.
-// IntersectionObserver ne anunță când butonul intră sau iese din ecran.
+// Bara de jos apare doar după ce ai derulat DINCOLO de butonul principal
+// (butonul a ieșit din ecran pe sus). Atunci titlul și prețul sunt deja
+// deasupra, deci bara nu le poate acoperi. La încărcare bara e ascunsă.
+// Verificăm la fiecare derulare (cel mult o dată pe cadru, cu requestAnimationFrame),
+// ca bara să apară corect și când pagina sare direct peste buton (ex: tasta End).
 function setupBuyBar() {
   const bar = document.getElementById("buy-bar");
   const mainButton = document.getElementById("add-to-cart");
-  if (!("IntersectionObserver" in window)) return; // browser foarte vechi: fără bară
+  let pending = false;
 
-  const observer = new IntersectionObserver(entries => {
-    bar.classList.toggle("is-visible", !entries[0].isIntersecting);
-  });
-  observer.observe(mainButton);
+  const update = () => {
+    pending = false;
+    bar.classList.toggle("is-visible", mainButton.getBoundingClientRect().bottom < 0);
+  };
+
+  window.addEventListener("scroll", () => {
+    if (!pending) {
+      pending = true;
+      requestAnimationFrame(update);
+    }
+  }, { passive: true });
+
+  update();
 }
 
 // Butoanele − / + și câmpul de cantitate

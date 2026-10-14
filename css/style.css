@@ -241,7 +241,7 @@ h3 {
 /* Etichetă mică, UPPERCASE, în Mono (ex: „RUCSACURI”) */
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 12px; /* 12px doar pentru etichete decorative; vezi mai jos excepțiile */
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0.08em;
@@ -251,6 +251,14 @@ h3 {
 
 .mono {
   font-family: var(--font-mono);
+}
+
+/* Etichete UPPERCASE care conțin informație utilă: minim 13px
+   (categoria + tipul turei pe produs, reducerea kitului, numărul de produse) */
+.product-info > .eyebrow,
+.kit-body > .eyebrow,
+.category-card .eyebrow {
+  font-size: 13px;
 }
 
 .text-muted {
@@ -365,11 +373,11 @@ h3 {
 
 .badge {
   display: inline-block;
-  padding: var(--space-1) var(--space-2);
+  padding: 4px 8px;
   background: var(--accent-soft);
   color: var(--accent-ink);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0.08em;
@@ -390,7 +398,7 @@ h3 {
   background: var(--ink);
   color: var(--bg);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
   text-align: center;
 }
@@ -436,7 +444,7 @@ h3 {
   background: var(--ink);
   color: var(--bg);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 18px;
   text-align: center;
 }
@@ -452,6 +460,43 @@ h3 {
   background: transparent;
   border: 2px solid var(--ink);
   font-weight: 600;
+}
+
+/* Telefon / tabletă: „☰ Meniu” mai compact, ca logo + lupă + coș + meniu să încapă la 375px */
+.header-actions .menu-toggle {
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+/* Rândul de căutare deschis de lupă (sub 1024px) */
+.search-bar {
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.search-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-bar-inner .input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.search-bar-inner .btn {
+  min-height: 48px;
+  padding: 0 var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .search-toggle,
+  .search-bar {
+    display: none !important; /* pe desktop căutarea e mereu în header */
+  }
 }
 
 /* Meniul de desktop și căutarea vizibilă: ascunse sub 1024px */
@@ -515,7 +560,7 @@ h3 {
   }
 
   .nav-item .badge {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   /* Săgeata ▾ se rotește când panoul e deschis */
@@ -621,7 +666,7 @@ h3 {
 .panel-cat-meta {
   display: block;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -884,7 +929,7 @@ h3 {
 
 .footer-tech {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.04em;
 }
 
@@ -900,7 +945,7 @@ h3 {
   border-top: 1px solid rgba(244, 242, 238, 0.15);
   color: rgba(244, 242, 238, 0.65);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .back-to-top {
@@ -994,8 +1039,9 @@ h3 {
 
 .card-tech {
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .card-price {
@@ -1020,9 +1066,6 @@ h3 {
     font-size: 1.0625rem;
   }
 
-  .card-tech {
-    font-size: 13px;
-  }
 }
 
 /* Un singur rând de 4 produse („Recomandate”, „Poate te interesează”):
@@ -2413,7 +2456,7 @@ h3 {
 
 .order-item-meta {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -2684,7 +2727,7 @@ body:has(dialog[open]) {
 
 .cart-kit-items {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 
@@ -3192,6 +3235,189 @@ ul.guide-safety-list {
   .guide-table .guide-weight { grid-area: weight; }
   .guide-why { grid-area: why; }
   .guide-product { grid-area: product; }
+}
+
+
+/* ---------- 30. UX telefon: Acasă și pagina de produs ---------- */
+
+/* Rândul „4 produse · 1,22 kg” există doar pentru cardul compact de kit (telefon) */
+.kit-meta {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Hero mai scund pe telefon (titlul și textele rămân la fel) */
+  .hero-text {
+    gap: var(--space-3);
+    padding-block: var(--space-4) var(--space-5);
+  }
+
+  .hero-media img {
+    aspect-ratio: 21 / 9;
+  }
+
+  .hero-actions .btn {
+    padding: 0 var(--space-4);
+  }
+
+  /* Secțiuni mai apropiate */
+  .section {
+    padding-block: var(--space-5);
+  }
+
+  .section-head {
+    margin-bottom: var(--space-4);
+  }
+
+  /* Categoriile: un rând care se glisează lateral, până la marginea ecranului */
+  .category-grid {
+    display: flex;
+    gap: var(--space-3);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: none; /* fără bară de derulare vizibilă */
+  }
+
+  .category-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-card {
+    flex: 0 0 120px;
+    scroll-snap-align: start;
+  }
+
+  .category-card-body {
+    padding: var(--space-2) 10px var(--space-3);
+  }
+
+  .category-card h3 {
+    font-size: 15px;
+  }
+
+  /* „Recomandate”: poze pătrate pe telefon, ca prețul să apară mai sus */
+  .row-of-4 .card-media img {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Kit-uri compacte: mozaic mic în stânga, esențialul în dreapta */
+  .kit-card {
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .kit-mosaic {
+    width: 96px;
+    margin: var(--space-3) 0 var(--space-3) var(--space-3);
+  }
+
+  .kit-body {
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .kit-body h3 {
+    font-size: 1.0625rem;
+  }
+
+  .kit-short,
+  .kit-items,
+  .kit-weight {
+    display: none;
+  }
+
+  .kit-meta {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .kit-totals {
+    margin-top: var(--space-1);
+    padding-top: 0;
+  }
+
+  .kit-price {
+    text-align: left;
+  }
+
+  .kit-body .price-now {
+    font-size: 1.25rem;
+  }
+
+  .kit-body .btn {
+    min-height: 44px;
+    margin-top: var(--space-2);
+  }
+}
+
+
+/* Pagina de produs pe telefon: categoria, titlul și prețul înaintea galeriei.
+   .product-info „dispare” ca dreptunghi (display: contents), iar copiii lui
+   se așază în grila paginii, în ordinea dată de `order`. Desktop: neschimbat. */
+@media (max-width: 767px) {
+  .product-layout {
+    gap: var(--space-4);
+  }
+
+  .product-info {
+    display: contents;
+  }
+
+  .product-info > * {
+    order: 5; /* variante, culori, cantitate, buton, livrare... */
+  }
+
+  .product-info > .eyebrow {
+    order: 1;
+  }
+
+  .product-info > .product-title {
+    order: 2;
+  }
+
+  .product-info > .price-box {
+    order: 3;
+  }
+
+  .gallery {
+    order: 4;
+  }
+
+  /* Poza principală pătrată, cel mult 55% din înălțimea ecranului,
+     pe un fundal de aceeași culoare cu fundalul pozelor */
+  .gallery-main {
+    display: flex;
+    justify-content: center;
+    background: var(--placeholder);
+  }
+
+  .gallery-main .product-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: 55vh;
+    object-fit: contain;
+    background: transparent;
+  }
+
+  /* Miniaturi pătrate de 56×56, cu 8px între ele */
+  .thumbs {
+    gap: var(--space-2);
+  }
+
+  .thumb {
+    width: 56px;
+    height: 56px;
+  }
+
+  .thumb img {
+    height: 100%;
+    aspect-ratio: 1 / 1;
+  }
 }
 
 

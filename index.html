@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2026101402">
 </head>
 <body data-page="home">
   <a class="skip-link" href="#main">Sari la conținut</a>
@@ -37,10 +37,10 @@
         <div class="hero-text">
           <p class="eyebrow">Accesorii pentru hiking</p>
           <h1 id="hero-title">Echipament ușor pentru ture pe munte</h1>
-          <p class="hero-lead">Rucsacuri, frontale, bețe și tot ce mai încape în rucsac. La fiecare produs scrie greutatea exactă, ca să știi cât duci în spate.</p>
+          <p class="hero-lead">Vezi greutatea fiecărui produs și câte grame duci în total, direct din coș.</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="catalog.html">Vezi catalogul</a>
-            <a class="btn btn-secondary" href="#kituri">Kit-uri gata făcute</a>
+            <a class="btn btn-secondary" href="ghid.html">Ce iei într-o tură <span aria-hidden="true">→</span></a>
           </div>
         </div>
         <div class="hero-media">
@@ -61,18 +61,7 @@
       </div>
     </section>
 
-    <!-- 3. Kit-uri -->
-    <section class="section" id="kituri" aria-labelledby="kits-title">
-      <div class="container">
-        <div class="section-head">
-          <h2 id="kits-title">Kit-uri gata făcute</h2>
-          <p class="text-muted">Produse alese împreună, cu reducere</p>
-        </div>
-        <div class="kit-grid" id="kit-grid"></div>
-      </div>
-    </section>
-
-    <!-- 4. Recomandate -->
+    <!-- 3. Recomandate (înaintea kit-urilor: pe telefon, produsele apar mai repede) -->
     <section class="section" aria-labelledby="featured-title">
       <div class="container">
         <div class="section-head">
@@ -80,6 +69,17 @@
           <a class="text-link" href="catalog.html">Vezi catalogul</a>
         </div>
         <div class="product-grid row-of-4" id="featured-grid"></div>
+      </div>
+    </section>
+
+    <!-- 4. Kit-uri -->
+    <section class="section" id="kituri" aria-labelledby="kits-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="kits-title">Kit-uri gata făcute</h2>
+          <p class="text-muted">Produse alese împreună, cu reducere</p>
+        </div>
+        <div class="kit-grid" id="kit-grid"></div>
       </div>
     </section>
 
@@ -114,8 +114,8 @@
 
   <footer id="site-footer"></footer>
 
-  <script src="js/products.js"></script>
-  <script src="js/cart.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/products.js?v=2026101402"></script>
+  <script src="js/cart.js?v=2026101402"></script>
+  <script src="js/main.js?v=2026101402"></script>
 </body>
 </html>
