@@ -1871,7 +1871,7 @@ function guidePanelHTML(list, checks, isActive) {
             ${isGuideChecked(checks, list.id, product.id) ? "checked" : ""}>
         </td>
         <th class="guide-what" scope="row"><label for="${boxId}">${item.what}</label></th>
-        <td class="guide-why">${item.why}</td>
+        <td class="guide-why"><span class="guide-why-text">${item.why}</span></td>
         <td class="guide-product"><a href="produs.html?id=${product.id}">${label}</a>${soldOut}</td>
         <td class="guide-weight">${showWeight(variant.weight)}</td>
       </tr>`;

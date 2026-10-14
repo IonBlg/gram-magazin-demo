@@ -3126,15 +3126,17 @@ body:has(dialog[open]) {
   border-top: 2px solid var(--ink);
 }
 
+/* Eticheta sus, cifra + „N din M bifate” dedesubt (grilă: nu se lățește inutil) */
 .guide-total {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
   align-items: baseline;
   gap: var(--space-1) var(--space-3);
 }
 
 .guide-total .eyebrow {
-  width: 100%;
+  grid-column: 1 / -1;
 }
 
 .guide-total strong {
@@ -3187,6 +3189,47 @@ ul.guide-safety-list {
   align-items: center;
   gap: var(--space-2) var(--space-3);
   margin-block: var(--space-6) var(--space-7);
+}
+
+/* De la 768px: tabelul mai aerisit (pe telefon rămân „fișele” de mai jos) */
+@media (min-width: 768px) {
+  .guide-table th,
+  .guide-table td {
+    padding: 18px 16px;
+    vertical-align: middle;
+  }
+
+  /* Prima coloană (bifa) */
+  .guide-table th:first-child,
+  .guide-table td:first-child {
+    width: 62px; /* 24px + bifa 22px + 16px */
+    padding-left: 24px;
+  }
+
+  /* Ultima coloană (Greutate) */
+  .guide-table th:last-child,
+  .guide-table td:last-child {
+    width: 120px;
+    padding-right: 24px;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  /* „De ce”: culoarea pe celulă; lățimea maximă pe textul din ea
+     (browserele ignoră max-width pus direct pe o celulă de tabel) */
+  .guide-why {
+    color: var(--ink-2);
+  }
+
+  .guide-why-text {
+    display: block;
+    max-width: 52ch;
+  }
+
+  /* „Greutate totală”: aliniat cu tabelul (24px lateral) */
+  .guide-summary {
+    padding-inline: 24px;
+  }
 }
 
 /* Pe telefon: fiecare rând din tabel devine o „fișă” */
