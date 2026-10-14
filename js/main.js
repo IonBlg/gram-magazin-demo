@@ -929,10 +929,11 @@ function productPageHTML(product) {
         </ol>
       </nav>
 
+      <!-- Ordinea din HTML = ordinea vizuală (și pentru cititoarele de ecran):
+           titlu + preț, apoi galeria, apoi restul. Pe desktop, CSS-ul așază
+           galeria în stânga și cele două blocuri de detalii în dreapta. -->
       <div class="product-layout">
-        ${galleryHTML(product)}
-
-        <div class="product-info">
+        <div class="product-head">
           <p class="eyebrow">${category.name} · ${tripNames}</p>
           <h1 class="product-title">${product.name}</h1>
           <p class="product-description">${product.description}</p>
@@ -947,7 +948,11 @@ function productPageHTML(product) {
               <span class="price-box-weight" id="product-weight"></span>
             </div>
           </div>
+        </div>
 
+        ${galleryHTML(product)}
+
+        <div class="product-info">
           ${stockHTML(product)}
           ${variantPickerHTML(product)}
           ${colorPickerHTML(product)}

@@ -255,7 +255,7 @@ h3 {
 
 /* Etichete UPPERCASE care conțin informație utilă: minim 13px
    (categoria + tipul turei pe produs, reducerea kitului, numărul de produse) */
-.product-info > .eyebrow,
+.product-head > .eyebrow,
 .kit-body > .eyebrow,
 .category-card .eyebrow {
   font-size: 13px;
@@ -1619,7 +1619,8 @@ h3 {
   object-fit: cover;
 }
 
-/* Informațiile din dreapta */
+/* Detaliile: sus (categorie, titlu, descriere, preț) și restul (variante, buton...) */
+.product-head,
 .product-info {
   display: flex;
   flex-direction: column;
@@ -1900,12 +1901,25 @@ h3 {
 @media (min-width: 900px) {
   .product-layout {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--space-7);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "gallery head"
+      "gallery info";
+    gap: var(--space-4) var(--space-7);
     align-items: start;
   }
 
-  /* Informațiile rămân vizibile cât derulezi pe lângă poză */
+  .gallery {
+    grid-area: gallery;
+  }
+
+  .product-head {
+    grid-area: head;
+  }
+
+  /* Restul detaliilor rămân vizibile cât derulezi pe lângă poză */
   .product-info {
+    grid-area: info;
     position: sticky;
     top: var(--space-5);
   }
@@ -3356,36 +3370,11 @@ ul.guide-safety-list {
 }
 
 
-/* Pagina de produs pe telefon: categoria, titlul și prețul înaintea galeriei.
-   .product-info „dispare” ca dreptunghi (display: contents), iar copiii lui
-   se așază în grila paginii, în ordinea dată de `order`. Desktop: neschimbat. */
+/* Pagina de produs pe telefon: categoria, titlul și prețul sunt înaintea
+   galeriei direct în HTML (vezi productPageHTML), deci aici doar mărimile. */
 @media (max-width: 767px) {
   .product-layout {
     gap: var(--space-4);
-  }
-
-  .product-info {
-    display: contents;
-  }
-
-  .product-info > * {
-    order: 5; /* variante, culori, cantitate, buton, livrare... */
-  }
-
-  .product-info > .eyebrow {
-    order: 1;
-  }
-
-  .product-info > .product-title {
-    order: 2;
-  }
-
-  .product-info > .price-box {
-    order: 3;
-  }
-
-  .gallery {
-    order: 4;
   }
 
   /* Poza principală pătrată, cel mult 55% din înălțimea ecranului,
