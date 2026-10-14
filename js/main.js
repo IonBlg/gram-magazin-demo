@@ -217,40 +217,95 @@ function renderFooter() {
   const footer = document.getElementById("site-footer");
   if (!footer) return;
 
-  const categoryLinks = CATEGORIES.map(c =>
+  const shopLinks = CATEGORIES.map(c =>
     `<li><a href="catalog.html?cat=${c.id}">${c.name}</a></li>`
   ).join("");
 
   footer.innerHTML = `
     <div class="site-footer-inner">
       <div class="container">
+
+        <!-- a) Magazinul în cifre: totul calculat din products.js -->
+        <ul class="footer-stats" aria-label="Magazinul în cifre">${footerStatsHTML()}</ul>
+
+        <!-- b) Cele 4 coloane -->
         <div class="footer-grid">
-          <div>
+          <div class="footer-brand">
             <p class="footer-logo">${SHOP.name}</p>
             <p class="footer-slogan">${SHOP.slogan}</p>
+            <p class="footer-about">Magazin demo de accesorii pentru hiking. La fiecare produs scrie greutatea exactă, iar coșul adună câte grame duci în spate.</p>
+            <a class="btn btn-outline-light" href="catalog.html">Vezi catalogul</a>
           </div>
 
-          <nav aria-label="Categorii (subsol)">
-            <h2 class="eyebrow footer-title">Categorii</h2>
-            <ul class="footer-list">
-              ${categoryLinks}
+          <nav aria-label="Magazin (subsol)">
+            <h2 class="eyebrow footer-title">Magazin</h2>
+            <ul class="footer-list footer-list-columns">
+              ${shopLinks}
               <li><a href="catalog.html?cat=kituri">Kit-uri</a></li>
             </ul>
           </nav>
 
           <div>
-            <h2 class="eyebrow footer-title">Livrare și retur</h2>
-            <p class="footer-text">Livrare gratuită de la ${showPrice(SHOP.freeShippingFrom)}. Altfel, livrarea costă ${showPrice(SHOP.shippingCost)}.</p>
-            <p class="footer-text">Retur în ${countLabel(SHOP.returnDays, "zi", "zile")} de la primire.</p>
+            <h2 class="eyebrow footer-title">Ajutor</h2>
+            <p class="footer-text"><strong>Livrare</strong> gratuită de la ${showPrice(SHOP.freeShippingFrom)}, altfel ${showPrice(SHOP.shippingCost)}.</p>
+            <p class="footer-text"><strong>Retur</strong> în ${countLabel(SHOP.returnDays, "zi", "zile")} de la primire.</p>
+            <ul class="footer-list">
+              <li><a href="cos.html">Coșul tău</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="eyebrow footer-title">Despre proiect</h2>
+            <ul class="footer-list">
+              <li>
+                <a href="https://github.com/IonBlg/gram-magazin-demo" target="_blank" rel="noopener">
+                  Codul pe GitHub <span aria-hidden="true">↗</span><span class="visually-hidden"> (se deschide într-un tab nou)</span>
+                </a>
+              </li>
+              <li><a href="credite.html">Credite foto</a></li>
+            </ul>
+            <p class="footer-text footer-tech">HTML, CSS, JavaScript</p>
           </div>
         </div>
 
+        <!-- c) Rândul de jos -->
         <div class="footer-bottom">
-          <p>Proiect demo de portofoliu realizat de Ion Beșleaga</p>
-          <p>Foto: Unsplash (<a href="credite.html">vezi creditele</a>)</p>
+          <p>© ${new Date().getFullYear()} ${SHOP.name} · proiect demo de portofoliu realizat de Ion Beșleaga · nu se fac plăți reale</p>
+          <a class="back-to-top" href="#site-header">Sus <span aria-hidden="true">↑</span></a>
         </div>
       </div>
     </div>`;
+
+  setupBackToTop();
+}
+
+// Banda cu cifre: număr de produse, categorii, kit-uri și cea mai ușoară variantă
+function footerStatsHTML() {
+  const allWeights = PRODUCTS.flatMap(p => p.variants.map(v => v.weight));
+  const stats = [
+    [PRODUCTS.length, "produse"],
+    [CATEGORIES.length, "categorii"],
+    [KITS.length, "kit-uri"],
+    [showWeight(Math.min(...allWeights)), "cel mai ușor"]
+  ];
+
+  return stats.map(([value, label]) => `
+    <li>
+      <span class="footer-stat-value">${value}</span>
+      <span class="footer-stat-label">${label}</span>
+    </li>`).join("");
+}
+
+// „Sus ↑”: urcă la începutul paginii și mută focusul pe logo.
+// (Cu JavaScript, nu cu href="#": în 404.html, din cauza <base>, „#” ar duce la Acasă.)
+function setupBackToTop() {
+  document.querySelector(".back-to-top").addEventListener("click", event => {
+    event.preventDefault();
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const logo = document.querySelector(".logo");
+    if (logo) logo.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  });
 }
 
 
@@ -321,15 +376,13 @@ function kitCard(kit) {
   // Kitul se poate cumpăra doar dacă toate produsele lui sunt în stoc
   const available = kit.items.every(item => getProduct(item.productId).inStock);
 
-  // Pozele pentru mozaic (maxim 4); căsuțele rămase sunt goale
+  // Pozele pentru mozaic (maxim 4). Clasa kit-mosaic-3 / kit-mosaic-4 spune
+  // CSS-ului cum să le așeze (la 3: prima poză mare în stânga).
   const cells = [];
   kit.items.slice(0, 4).forEach(item => {
     const product = getProduct(item.productId);
     cells.push(`<img src="${product.images[0]}" alt="${product.name}" width="1200" height="1500" loading="lazy">`);
   });
-  while (cells.length < 4) {
-    cells.push(`<div class="kit-mosaic-empty eyebrow">${countLabel(kit.items.length, "produs", "produse")}</div>`);
-  }
 
   // Lista: „Rucsac Creasta · 20 L ........ 890 g”
   const itemRows = kit.items.map(item => {
@@ -341,7 +394,7 @@ function kitCard(kit) {
 
   return `
     <article class="kit-card" id="${kit.id}">
-      <div class="kit-mosaic">${cells.join("")}</div>
+      <div class="kit-mosaic kit-mosaic-${cells.length}">${cells.join("")}</div>
       <div class="kit-body">
         <p class="eyebrow">Kit · −${discountPercent}%</p>
         <h3>${kit.name}</h3>

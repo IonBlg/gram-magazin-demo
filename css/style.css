@@ -549,9 +549,51 @@ h3 {
   outline-color: var(--bg);
 }
 
+/* a) Banda „fișă tehnică” cu cifre
+   (ul.footer-stats, ca să câștige în fața regulii ul[class] { padding: 0 }) */
+ul.footer-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-4);
+  margin-bottom: var(--space-7);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid rgba(244, 242, 238, 0.15);
+}
+
+.footer-stats li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.footer-stat-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--bg);
+}
+
+.footer-stat-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 242, 238, 0.65);
+}
+
+/* b) Cele 4 coloane: una sub alta pe telefon, 2×2 pe tabletă, 4 pe desktop */
 .footer-grid {
   display: grid;
-  gap: var(--space-6);
+  gap: 40px;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .footer-logo {
@@ -559,26 +601,43 @@ h3 {
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .footer-slogan {
+  color: var(--bg);
+}
+
+.footer-about {
+  max-width: 32ch;
+  color: rgba(244, 242, 238, 0.75);
+}
+
+/* Butonul „Vezi catalogul”: contur alb, pe fundal închis */
+.btn-outline-light {
+  min-height: 44px;
   margin-top: var(--space-1);
-  color: var(--line);
+  padding: 0 var(--space-5);
+  background: transparent;
+  border-color: var(--bg);
+  color: var(--bg);
+}
+
+.btn-outline-light:hover {
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .footer-title {
   margin-bottom: var(--space-3);
-  color: var(--line);
-}
-
-.footer-list li + li {
-  margin-top: var(--space-1);
+  color: rgba(244, 242, 238, 0.65);
 }
 
 .footer-list a {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
+  gap: 6px; /* spațiul dinaintea săgeții „↗” */
+  min-height: 36px;
   text-decoration: none;
 }
 
@@ -587,34 +646,83 @@ h3 {
   text-underline-offset: 5px;
 }
 
+/* Lista „Magazin” pe 2 coloane, ca să nu fie lungă */
+.footer-list-columns {
+  columns: 2;
+  column-gap: var(--space-5);
+}
+
+.footer-list-columns li {
+  break-inside: avoid;
+}
+
 .footer-text {
-  color: var(--line);
+  color: rgba(244, 242, 238, 0.75);
+}
+
+.footer-text strong {
+  color: var(--bg);
+  font-weight: 600;
 }
 
 .footer-text + .footer-text {
   margin-top: var(--space-2);
 }
 
+.footer-text + .footer-list,
+.footer-list + .footer-text {
+  margin-top: var(--space-2);
+}
+
+.footer-tech {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* c) Rândul de jos */
 .footer-bottom {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-5);
   margin-top: var(--space-7);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--ink-2);
-  color: var(--line);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(244, 242, 238, 0.15);
+  color: rgba(244, 242, 238, 0.65);
   font-family: var(--font-mono);
   font-size: 12px;
 }
 
-.footer-bottom a {
-  text-underline-offset: 5px;
+.back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  color: var(--bg);
+  text-decoration: none;
+}
+
+.back-to-top:hover {
+  text-decoration: underline;
 }
 
 @media (min-width: 768px) {
+  ul.footer-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .footer-grid {
-    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: var(--space-6);
   }
 }
 
@@ -857,29 +965,29 @@ h3 {
   border: 1px solid var(--line);
 }
 
-/* Mozaic 2×2 cu pozele produselor din kit */
+/* Mozaic cu pozele produselor din kit: pătrat, 2 coloane × 2 rânduri */
 .kit-mosaic {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 1px;
   align-self: start;
+  aspect-ratio: 1 / 1;
   background: var(--line);
 }
 
-.kit-mosaic img,
-.kit-mosaic-empty {
+.kit-mosaic img {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
+  min-height: 0;
   object-fit: cover;
   background: var(--placeholder);
 }
 
-/* Căsuța goală când kitul are mai puțin de 4 produse */
-.kit-mosaic-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
+/* Kit cu 3 produse: prima poză ocupă ambele rânduri în stânga,
+   celelalte două stau una sub alta în dreapta */
+.kit-mosaic-3 img:first-child {
+  grid-row: 1 / span 2;
 }
 
 .kit-body {
@@ -986,6 +1094,14 @@ h3 {
   /* Pe ecran mare: mozaicul în stânga, textul în dreapta */
   .kit-card {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Mozaicul se întinde cât tot cardul (fără spațiu alb sub poze) */
+  .kit-mosaic {
+    align-self: stretch;
+    height: auto;
+    min-height: 100%;
+    aspect-ratio: auto;
   }
 }
 
