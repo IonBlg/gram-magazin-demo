@@ -47,18 +47,30 @@ function getProductsInCategory(categoryId) {
   return PRODUCTS.filter(p => p.category === categoryId);
 }
 
-// Poza unui produs în culoarea aleasă: color.image dacă există,
-// altfel poza implicită (images[0]). Vezi explicația din products.js.
-function getProductImage(product, colorId) {
+// Pozele unui produs în culoarea aleasă: pentru fiecare poziție i,
+// color.images[i] dacă există, altfel product.images[i].
+// Vezi explicația câmpului `images` din products.js.
+function getProductImages(product, colorId) {
   const color = product.colors.find(c => c.id === colorId);
-  return color && color.image ? color.image : product.images[0];
+  const colorImages = color && Array.isArray(color.images) ? color.images : [];
+  return product.images.map((src, i) => colorImages[i] || src);
 }
 
-// Culoarea pe care o arată de fapt poza (cea aleasă, dacă are poză proprie;
+// Prima poză (cea principală) în culoarea aleasă
+function getProductImage(product, colorId) {
+  return getProductImages(product, colorId)[0];
+}
+
+// true dacă o culoare are măcar o poză proprie
+function hasColorImages(color) {
+  return Boolean(color && Array.isArray(color.images) && color.images.length > 0);
+}
+
+// Culoarea pe care o arată de fapt poza (cea aleasă, dacă are poze proprii;
 // altfel culoarea implicită) — pentru textul alternativ
 function getShownColor(product, colorId) {
   const color = product.colors.find(c => c.id === colorId);
-  return color && color.image ? color : product.colors[0];
+  return hasColorImages(color) ? color : product.colors[0];
 }
 
 // Greutatea celei mai ușoare variante
@@ -830,7 +842,8 @@ const productState = {
   product: null,
   variant: null,
   color: null,
-  quantity: 1
+  quantity: 1,
+  imageIndex: 0 // miniatura selectată în galerie
 };
 
 function initProduct() {
@@ -848,6 +861,7 @@ function initProduct() {
   productState.variant = product.variants[0];
   productState.color = product.colors.length > 0 ? product.colors[0] : null;
   productState.quantity = 1;
+  productState.imageIndex = 0; // ce miniatură e selectată în galerie
 
   setPageTitle(product.name, product.short + " " + product.description);
   root.innerHTML = productPageHTML(product);
@@ -982,7 +996,7 @@ function colorPickerHTML(product) {
   }
 
   // Nota apare doar dacă vreo culoare (în afară de cea implicită) nu are poză proprie
-  const missingImage = product.colors.slice(1).some(c => !c.image);
+  const missingImage = product.colors.slice(1).some(c => !hasColorImages(c));
   const note = missingImage
     ? `<p class="option-note">Poza arată culoarea ${product.colors[0].name.toLowerCase()}.</p>`
     : "";
@@ -1125,35 +1139,32 @@ function setupGallery() {
 
   thumbs.forEach(thumb => {
     thumb.addEventListener("click", () => {
-      const index = Number(thumb.dataset.index);
       const { product, color } = productState;
-      // Prima poză e cea a culorii alese; celelalte sunt detalii comune
-      mainImage.src = index === 0 ? getProductImage(product, color && color.id) : product.images[index];
+      productState.imageIndex = Number(thumb.dataset.index);
+      mainImage.src = getProductImages(product, color && color.id)[productState.imageIndex];
       thumbs.forEach(t => t.setAttribute("aria-pressed", t === thumb));
     });
   });
 }
 
-// La alegerea unei culori: poza mare, prima miniatură și miniatura din bara de jos
-// arată culoarea aleasă (dacă are poză proprie)
-function showColorImage() {
-  const { product, color } = productState;
-  const src = getProductImage(product, color && color.id);
+// La alegerea unei culori: toate miniaturile, poza mare și miniatura din bara
+// de jos trec pe pozele culorii. Miniatura selectată rămâne aceeași
+// (dacă erai pe poza 2 și alegi Grafit, vezi poza 2 în grafit).
+function showColorImages() {
+  const { product, color, imageIndex } = productState;
+  const images = getProductImages(product, color && color.id);
 
-  document.getElementById("main-image").src = src;
-  document.getElementById("buy-bar-image").src = src;
-
-  const thumbs = document.querySelectorAll(".thumb");
-  if (thumbs.length > 0) {
-    thumbs[0].querySelector("img").src = src;
-    thumbs.forEach((t, i) => t.setAttribute("aria-pressed", i === 0));
-  }
+  document.getElementById("main-image").src = images[imageIndex];
+  document.getElementById("buy-bar-image").src = images[0];
+  document.querySelectorAll(".thumb img").forEach((img, i) => {
+    img.src = images[i];
+  });
 }
 
-// Preîncarcă pozele culorilor, ca schimbarea culorii să fie instantă
+// Preîncarcă toate pozele culorilor, ca schimbarea culorii să fie instantă
 function preloadColorImages(product) {
   product.colors.forEach(color => {
-    if (color.image) new Image().src = color.image;
+    if (hasColorImages(color)) color.images.forEach(src => { new Image().src = src; });
   });
 }
 
@@ -1169,7 +1180,7 @@ function setupOptionButtons() {
   document.querySelectorAll("[data-color]").forEach(button => {
     button.addEventListener("click", () => {
       productState.color = productState.product.colors.find(c => c.id === button.dataset.color);
-      showColorImage();
+      showColorImages();
       updateProductDetails();
     });
   });

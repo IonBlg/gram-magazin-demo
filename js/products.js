@@ -57,11 +57,15 @@ const TRIP_TYPES = [
    - variants    → variantele: fiecare are PREȚUL și GREUTATEA ei
    - colors      → culorile disponibile (pot lipsi). Prima culoare din
                    listă e cea implicită și folosește poza images[0].
-                   O culoare poate avea câmpul opțional `image` = poza
-                   produsului în acea culoare (ex: "images/rucsac-sprint-negru-1.jpg").
-                   Pe site, la alegerea culorii se schimbă poza; dacă
-                   o culoare NU are `image`, rămâne poza implicită.
-                   Adaugă `image` doar dacă fișierul există în images/.
+                   O culoare poate avea câmpul opțional `images` = pozele
+                   produsului în acea culoare, în ACEEAȘI ordine ca `images`
+                   de mai sus (poza 1, poza 2, ...). Exemplu:
+                     images: ["images/rucsac-creasta-grafit-1.jpg", "images/rucsac-creasta-grafit-2.jpg"]
+                   Pe site, la alegerea culorii se schimbă galeria: pentru
+                   fiecare poziție se folosește poza culorii, iar dacă
+                   lipsește, poza implicită de pe aceeași poziție.
+                   O culoare fără `images` folosește pozele implicite.
+                   Adaugă doar poze care există în images/.
    - specs       → fișa tehnică
    - inStock     → true = în stoc
    ---------------------------------------------------------- */
@@ -85,8 +89,10 @@ const PRODUCTS = [
     ],
     colors: [
       { id: "portocaliu", name: "Portocaliu", hex: "#C2410C" },
-      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C", image: "images/rucsac-creasta-grafit-1.jpg" },
-      { id: "oliv",       name: "Oliv",       hex: "#5B6236", image: "images/rucsac-creasta-oliv-1.jpg" }
+      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C",
+        images: ["images/rucsac-creasta-grafit-1.jpg", "images/rucsac-creasta-grafit-2.jpg", "images/rucsac-creasta-grafit-3.jpg"] },
+      { id: "oliv",       name: "Oliv",       hex: "#5B6236",
+        images: ["images/rucsac-creasta-oliv-1.jpg", "images/rucsac-creasta-oliv-2.jpg", "images/rucsac-creasta-oliv-3.jpg"] }
     ],
     specs: {
       "Material": "Nailon ripstop 210D",
@@ -134,7 +140,7 @@ const PRODUCTS = [
     ],
     colors: [
       { id: "portocaliu", name: "Portocaliu", hex: "#C2410C" },
-      { id: "negru",      name: "Negru",      hex: "#1A1A17", image: "images/rucsac-sprint-negru-1.jpg" }
+      { id: "negru",      name: "Negru",      hex: "#1A1A17", images: ["images/rucsac-sprint-negru-1.jpg"] }
     ],
     specs: {
       "Volum": "15 L",
@@ -267,7 +273,7 @@ const PRODUCTS = [
     ],
     colors: [
       { id: "portocaliu", name: "Portocaliu", hex: "#C2410C" },
-      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C", image: "images/termos-parau-grafit-1.jpg" }
+      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C", images: ["images/termos-parau-grafit-1.jpg"] }
     ],
     specs: {
       "Material": "Oțel inoxidabil",
