@@ -790,41 +790,7 @@ h3 {
   outline-color: var(--bg);
 }
 
-/* a) Banda „fișă tehnică” cu cifre
-   (ul.footer-stats, ca să câștige în fața regulii ul[class] { padding: 0 }) */
-ul.footer-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-4);
-  margin-bottom: var(--space-7);
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid rgba(244, 242, 238, 0.15);
-}
-
-.footer-stats li {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.footer-stat-value {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--bg);
-}
-
-.footer-stat-label {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(244, 242, 238, 0.65);
-}
-
-/* b) Cele 4 coloane: una sub alta pe telefon, 2×2 pe tabletă, 4 pe desktop */
+/* Cele 4 coloane: una sub alta pe telefon, 2×2 pe tabletă, 4 pe desktop */
 .footer-grid {
   display: grid;
   gap: 40px;
@@ -849,15 +815,10 @@ ul.footer-stats {
   color: var(--bg);
 }
 
-.footer-about {
-  max-width: 32ch;
-  color: rgba(244, 242, 238, 0.75);
-}
-
 /* Butonul „Vezi catalogul”: contur alb, pe fundal închis */
 .btn-outline-light {
   min-height: 44px;
-  margin-top: var(--space-1);
+  margin-top: var(--space-3); /* + gap 12px = ~24px sub slogan */
   padding: 0 var(--space-5);
   background: transparent;
   border-color: var(--bg);
@@ -927,7 +888,7 @@ ul.footer-stats {
   letter-spacing: 0.04em;
 }
 
-/* c) Rândul de jos */
+/* Rândul de jos */
 .footer-bottom {
   display: flex;
   flex-wrap: wrap;
@@ -956,10 +917,6 @@ ul.footer-stats {
 }
 
 @media (min-width: 768px) {
-  ul.footer-stats {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .footer-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 40px var(--space-6);

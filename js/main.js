@@ -378,15 +378,11 @@ function renderFooter() {
     <div class="site-footer-inner">
       <div class="container">
 
-        <!-- a) Magazinul în cifre: totul calculat din products.js -->
-        <ul class="footer-stats" aria-label="Magazinul în cifre">${footerStatsHTML()}</ul>
-
-        <!-- b) Cele 4 coloane -->
+        <!-- Cele 4 coloane -->
         <div class="footer-grid">
           <div class="footer-brand">
             <p class="footer-logo">${SHOP.name}</p>
             <p class="footer-slogan">${SHOP.slogan}</p>
-            <p class="footer-about">Magazin demo de accesorii pentru hiking. La fiecare produs scrie greutatea exactă, iar coșul adună câte grame duci în spate.</p>
             <a class="btn btn-outline-light" href="catalog.html">Vezi catalogul</a>
           </div>
 
@@ -425,7 +421,7 @@ function renderFooter() {
           </div>
         </div>
 
-        <!-- c) Rândul de jos -->
+        <!-- Rândul de jos -->
         <div class="footer-bottom">
           <p>© ${new Date().getFullYear()} ${SHOP.name} · proiect demo de portofoliu realizat de Ion Beșleaga · nu se fac plăți reale</p>
           <a class="back-to-top" href="#site-header">Sus <span aria-hidden="true">↑</span></a>
@@ -434,23 +430,6 @@ function renderFooter() {
     </div>`;
 
   setupBackToTop();
-}
-
-// Banda cu cifre: număr de produse, categorii, kit-uri și cea mai ușoară variantă
-function footerStatsHTML() {
-  const allWeights = PRODUCTS.flatMap(p => p.variants.map(v => v.weight));
-  const stats = [
-    [PRODUCTS.length, "produse"],
-    [CATEGORIES.length, "categorii"],
-    [KITS.length, "kit-uri"],
-    [showWeight(Math.min(...allWeights)), "cel mai ușor"]
-  ];
-
-  return stats.map(([value, label]) => `
-    <li>
-      <span class="footer-stat-value">${value}</span>
-      <span class="footer-stat-label">${label}</span>
-    </li>`).join("");
 }
 
 // „Sus ↑”: urcă la începutul paginii și mută focusul pe logo.
