@@ -201,6 +201,25 @@ h1, h2, h3, h4 {
   line-height: 1.1;
 }
 
+/* Titlurile se împart în rânduri cât mai egale (fără un cuvânt singur
+   pe ultimul rând). Pe lângă h1–h3: legendele din checkout și numele
+   de produs scrise în <p> (sertar, sumarul comenzii). */
+h1, h2, h3, h4,
+legend,
+.drawer-item-name,
+.order-item-name,
+.card-tech {
+  text-wrap: balance;
+}
+
+/* Textul obișnuit: browserul evită un cuvânt singur pe ultimul rând.
+   .choice = opțiunile din checkout (textul lor e în <span>, nu în <p>) */
+p,
+li,
+.choice {
+  text-wrap: pretty;
+}
+
 h1 {
   font-size: clamp(2rem, 1.5rem + 2.5vw, 3.5rem);
   font-weight: 800;
@@ -2543,6 +2562,28 @@ body:has(.drawer[open]) {
   font-family: var(--font-mono);
   font-size: 12px;
   word-break: break-all;
+}
+
+/* Numele autorului rămâne pe un rând (prenume + nume împreună) */
+.credit-author {
+  white-space: nowrap;
+}
+
+@media (max-width: 599px) {
+  /* Pe telefon: celule mai strânse, ca numele să încapă */
+  .credits-table th,
+  .credits-table td {
+    padding-inline: 6px;
+  }
+
+  .credits-table th:first-child,
+  .credits-table td:first-child {
+    width: 56px;
+  }
+
+  .credit-thumb {
+    width: 40px;
+  }
 }
 
 
