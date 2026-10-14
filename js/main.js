@@ -47,6 +47,20 @@ function getProductsInCategory(categoryId) {
   return PRODUCTS.filter(p => p.category === categoryId);
 }
 
+// Poza unui produs în culoarea aleasă: color.image dacă există,
+// altfel poza implicită (images[0]). Vezi explicația din products.js.
+function getProductImage(product, colorId) {
+  const color = product.colors.find(c => c.id === colorId);
+  return color && color.image ? color.image : product.images[0];
+}
+
+// Culoarea pe care o arată de fapt poza (cea aleasă, dacă are poză proprie;
+// altfel culoarea implicită) — pentru textul alternativ
+function getShownColor(product, colorId) {
+  const color = product.colors.find(c => c.id === colorId);
+  return color && color.image ? color : product.colors[0];
+}
+
 // Greutatea celei mai ușoare variante
 function getMinWeight(product) {
   return Math.min(...product.variants.map(v => v.weight));
@@ -841,6 +855,7 @@ function initProduct() {
   setupGallery();
   setupOptionButtons();
   setupQuantity();
+  window.addEventListener("load", () => preloadColorImages(product));
   setupAddToCart();
   updateProductDetails();
 }
@@ -961,6 +976,17 @@ function variantPickerHTML(product) {
 function colorPickerHTML(product) {
   if (product.colors.length === 0) return "";
 
+  // O singură culoare: nu ai ce alege, scriem doar culoarea
+  if (product.colors.length === 1) {
+    return `<p class="option-label">Culoare: <strong>${product.colors[0].name}</strong></p>`;
+  }
+
+  // Nota apare doar dacă vreo culoare (în afară de cea implicită) nu are poză proprie
+  const missingImage = product.colors.slice(1).some(c => !c.image);
+  const note = missingImage
+    ? `<p class="option-note">Poza arată culoarea ${product.colors[0].name.toLowerCase()}.</p>`
+    : "";
+
   const buttons = product.colors.map(c =>
     `<button class="swatch" type="button" data-color="${c.id}" aria-pressed="false" aria-label="${c.name}">
       <span style="background: ${c.hex}"></span>
@@ -971,7 +997,7 @@ function colorPickerHTML(product) {
     <div class="option-group">
       <p class="option-label" id="color-label">Culoare: <strong id="color-name"></strong></p>
       <div class="option-list" role="group" aria-labelledby="color-label">${buttons}</div>
-      ${product.colors.length > 1 ? '<p class="option-note">Poza arată un singur model de culoare.</p>' : ""}
+      ${note}
     </div>`;
 }
 
@@ -1006,6 +1032,7 @@ function buyBarHTML(product) {
 
   return `
     <div class="buy-bar" id="buy-bar" role="region" aria-label="Cumpără rapid">
+      <img class="buy-bar-image" id="buy-bar-image" src="${product.images[0]}" alt="" width="40" height="50">
       <div class="buy-bar-price">
         <span class="eyebrow">${product.name}</span>
         <span class="buy-bar-amount" id="buy-bar-price"></span>
@@ -1099,9 +1126,34 @@ function setupGallery() {
   thumbs.forEach(thumb => {
     thumb.addEventListener("click", () => {
       const index = Number(thumb.dataset.index);
-      mainImage.src = productState.product.images[index];
+      const { product, color } = productState;
+      // Prima poză e cea a culorii alese; celelalte sunt detalii comune
+      mainImage.src = index === 0 ? getProductImage(product, color && color.id) : product.images[index];
       thumbs.forEach(t => t.setAttribute("aria-pressed", t === thumb));
     });
+  });
+}
+
+// La alegerea unei culori: poza mare, prima miniatură și miniatura din bara de jos
+// arată culoarea aleasă (dacă are poză proprie)
+function showColorImage() {
+  const { product, color } = productState;
+  const src = getProductImage(product, color && color.id);
+
+  document.getElementById("main-image").src = src;
+  document.getElementById("buy-bar-image").src = src;
+
+  const thumbs = document.querySelectorAll(".thumb");
+  if (thumbs.length > 0) {
+    thumbs[0].querySelector("img").src = src;
+    thumbs.forEach((t, i) => t.setAttribute("aria-pressed", i === 0));
+  }
+}
+
+// Preîncarcă pozele culorilor, ca schimbarea culorii să fie instantă
+function preloadColorImages(product) {
+  product.colors.forEach(color => {
+    if (color.image) new Image().src = color.image;
   });
 }
 
@@ -1117,6 +1169,7 @@ function setupOptionButtons() {
   document.querySelectorAll("[data-color]").forEach(button => {
     button.addEventListener("click", () => {
       productState.color = productState.product.colors.find(c => c.id === button.dataset.color);
+      showColorImage();
       updateProductDetails();
     });
   });
@@ -1200,10 +1253,11 @@ function updateProductDetails() {
     button.setAttribute("aria-pressed", button.dataset.color === color.id);
   });
 
-  // Textul alternativ al pozei: numele + varianta.
-  // (Fără culoare: avem o singură poză pe produs, nu câte una pe culoare.)
+  // Textul alternativ al pozei: numele + varianta + culoarea din poză
+  // (dacă o culoare nu are poză proprie, poza arată culoarea implicită)
   let alt = product.name;
   if (product.variants.length > 1) alt += ", " + variant.label;
+  if (product.colors.length > 0) alt += ", " + getShownColor(product, color && color.id).name;
   document.getElementById("main-image").alt = alt;
 
   // Cantitatea și prețul de pe buton (doar dacă produsul e în stoc)

@@ -2818,87 +2818,6 @@ body:has(dialog[open]) {
   font-weight: 600;
 }
 
-/* Pe ecran îngust tabelul se poate derula orizontal, fără să lățească pagina */
-.table-wrap {
-  overflow-x: auto;
-  margin-bottom: var(--space-7);
-}
-
-.credits-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  font-size: 14px;
-}
-
-.credits-table th {
-  padding: var(--space-3);
-  border-bottom: 2px solid var(--ink);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-align: left;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.credits-table td {
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--line);
-  vertical-align: middle;
-}
-
-.credits-table a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 600;
-}
-
-/* Coloana cu poza: doar cât miniatura */
-.credits-table th:first-child,
-.credits-table td:first-child {
-  width: 72px;
-}
-
-.credit-thumb {
-  width: 48px;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  background: var(--placeholder);
-}
-
-.credit-file {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  word-break: break-all;
-}
-
-/* Numele autorului rămâne pe un rând (prenume + nume împreună) */
-.credit-author {
-  white-space: nowrap;
-}
-
-@media (max-width: 599px) {
-  /* Pe telefon: celule mai strânse, ca numele să încapă */
-  .credits-table th,
-  .credits-table td {
-    padding-inline: 6px;
-  }
-
-  .credits-table th:first-child,
-  .credits-table td:first-child {
-    width: 56px;
-  }
-
-  .credit-thumb {
-    width: 40px;
-  }
-}
-
-
 /* ---------- 27. Bara fixă „Adaugă în coș” (pagina de produs, telefon) ---------- */
 
 .buy-bar {
@@ -2932,6 +2851,14 @@ body:has(dialog[open]) {
   .buy-bar.is-visible {
     transform: none;
     visibility: visible;
+  }
+
+  .buy-bar-image {
+    width: 40px;
+    height: 50px;
+    flex-shrink: 0;
+    object-fit: cover;
+    background: var(--placeholder);
   }
 
   .buy-bar-price {

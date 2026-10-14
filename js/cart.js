@@ -147,7 +147,12 @@ function getCartLines(items) {
 
     const product = getProduct(item.productId);
     const variant = getVariant(product, item.variantId);
-    const color = product.colors.find(c => c.id === item.colorId) || null;
+    // Culoarea salvată; dacă nu mai există (ex: Popas Oliv, scos din magazin),
+    // folosim culoarea implicită a produsului
+    const color = product.colors.find(c => c.id === item.colorId) || product.colors[0] || null;
+    // getProductImage() e în main.js: se încarcă după acest fișier, dar e gata
+    // înainte ca getCartLines() să fie apelată (doar din main.js)
+    const image = getProductImage(product, color && color.id);
 
     return {
       type: "product",
@@ -156,8 +161,8 @@ function getCartLines(items) {
       variant,
       color,
       name: product.name,
-      image: product.images[0],
-      images: [product.images[0]],
+      image,
+      images: [image],
       link: "produs.html?id=" + product.id,
       quantity: item.quantity,
       unitPrice: variant.price,

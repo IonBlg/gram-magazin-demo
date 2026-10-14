@@ -55,7 +55,13 @@ const TRIP_TYPES = [
    - description → textul de pe pagina produsului
    - images      → lista de poze (prima = poza principală)
    - variants    → variantele: fiecare are PREȚUL și GREUTATEA ei
-   - colors      → culorile disponibile (pot lipsi)
+   - colors      → culorile disponibile (pot lipsi). Prima culoare din
+                   listă e cea implicită și folosește poza images[0].
+                   O culoare poate avea câmpul opțional `image` = poza
+                   produsului în acea culoare (ex: "images/rucsac-sprint-negru-1.jpg").
+                   Pe site, la alegerea culorii se schimbă poza; dacă
+                   o culoare NU are `image`, rămâne poza implicită.
+                   Adaugă `image` doar dacă fișierul există în images/.
    - specs       → fișa tehnică
    - inStock     → true = în stoc
    ---------------------------------------------------------- */
@@ -79,8 +85,8 @@ const PRODUCTS = [
     ],
     colors: [
       { id: "portocaliu", name: "Portocaliu", hex: "#C2410C" },
-      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C" },
-      { id: "oliv",       name: "Oliv",       hex: "#5B6236" }
+      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C", image: "images/rucsac-creasta-grafit-1.jpg" },
+      { id: "oliv",       name: "Oliv",       hex: "#5B6236", image: "images/rucsac-creasta-oliv-1.jpg" }
     ],
     specs: {
       "Material": "Nailon ripstop 210D",
@@ -104,8 +110,7 @@ const PRODUCTS = [
       { id: "l", label: "Spate L", price: 3290, weight: 1810 }
     ],
     colors: [
-      { id: "grafit", name: "Grafit", hex: "#3A3B3C" },
-      { id: "oliv",   name: "Oliv",   hex: "#5B6236" }
+      { id: "grafit", name: "Grafit", hex: "#3A3B3C" }
     ],
     specs: {
       "Volum": "45 L + 10 L extensie",
@@ -129,7 +134,7 @@ const PRODUCTS = [
     ],
     colors: [
       { id: "portocaliu", name: "Portocaliu", hex: "#C2410C" },
-      { id: "negru",      name: "Negru",      hex: "#1A1A17" }
+      { id: "negru",      name: "Negru",      hex: "#1A1A17", image: "images/rucsac-sprint-negru-1.jpg" }
     ],
     specs: {
       "Volum": "15 L",
@@ -262,7 +267,7 @@ const PRODUCTS = [
     ],
     colors: [
       { id: "portocaliu", name: "Portocaliu", hex: "#C2410C" },
-      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C" }
+      { id: "grafit",     name: "Grafit",     hex: "#3A3B3C", image: "images/termos-parau-grafit-1.jpg" }
     ],
     specs: {
       "Material": "Oțel inoxidabil",

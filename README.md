@@ -39,7 +39,8 @@ HTML, CSS și JavaScript **vanilla** — fără framework-uri, fără npm, făr�
 ├── js/products.js    „Baza de date”: produse, categorii, kit-uri
 ├── js/cart.js        Coșul (localStorage) și comanda de test
 ├── js/main.js        Header, footer, afișarea paginilor, filtre, checkout
-└── images/           Pozele produselor
+├── images/           Pozele produselor
+└── tools/            Scriptul care pregătește pozele (Python + Pillow)
 ```
 
 ## Cum îl rulezi local
@@ -56,8 +57,8 @@ apoi deschide `http://localhost:8000`.
 
 - Nu există server: produsele stau în `js/products.js`, iar coșul doar în browserul vizitatorului.
 - Comanda nu se trimite nicăieri; plata cu cardul este dezactivată.
-- Pozele arată produse similare, nu exact produsele inventate din magazin.
+- Pozele sunt generate cu inteligență artificială; produsele nu există în realitate.
 
 ## Credite
 
-Toate pozele sunt de pe [Unsplash](https://unsplash.com). Lista completă cu autorii: [credite.html](https://ionblg.github.io/gram-magazin-demo/credite.html).
+Pozele produselor și ale paginilor sunt generate cu inteligență artificială (Google Gemini); unele variante de culoare sunt aceeași poză recolorată digital. Produsele din magazin sunt inventate și nu există în realitate. Detalii: [credite.html](https://ionblg.github.io/gram-magazin-demo/credite.html).
