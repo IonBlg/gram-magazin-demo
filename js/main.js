@@ -20,13 +20,158 @@ const ICON_PATHS = {
   sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><path d="M15 4v4M9 10v4M17 16v4"/>',
   arrowLeft: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/>',
-  chevron: '<path d="M6 9l6 6 6-6"/>'
+  chevron: '<path d="M6 9l6 6 6-6"/>',
+  check: '<path d="M5 12l5 5 9-10"/>'
 };
 
 // Întoarce codul SVG al unei iconițe (aria-hidden: e doar decor)
 function icon(name, extraClass = "") {
   return `<svg class="icon ${extraClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     stroke-width="2" stroke-linecap="square" aria-hidden="true" focusable="false">${ICON_PATHS[name]}</svg>`;
+}
+
+
+/* ---------- 1b. Micro-animații: funcții ajutătoare ---------- */
+
+// true dacă utilizatorul a cerut mai puțină mișcare (setarea sistemului)
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// Citește o durată din CSS (ex: "--dur" → 220), ca JS și CSS să folosească aceleași valori
+function cssMs(name) {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+}
+
+// Curba pentru intrări (aceeași ca --ease din CSS)
+function cssEase() {
+  return getComputedStyle(document.documentElement).getPropertyValue("--ease").trim() || "ease-out";
+}
+
+// Rulează o animație (Web Animations API) doar dacă mișcarea e permisă.
+// Întoarce o promisiune care se termină când animația s-a terminat (sau imediat).
+function animate(element, keyframes, options) {
+  if (!element || !element.animate || prefersReducedMotion()) return Promise.resolve();
+  return element.animate(keyframes, options).finished.catch(() => {});
+}
+
+// Pozele de produs apar cu fade după încărcare (vezi .js-fade în style.css).
+// „load” nu urcă prin document, dar îl prindem în faza de capturare (true).
+function setupImageFade() {
+  document.documentElement.classList.add("js-fade");
+  const markLoaded = event => {
+    if (event.target.tagName === "IMG") event.target.classList.add("is-loaded");
+  };
+  document.addEventListener("load", markLoaded, true);
+  document.addEventListener("error", markLoaded, true); // o poză stricată nu rămâne invizibilă
+}
+
+// Pozele deja încărcate (din cache) primesc imediat clasa
+function markLoadedImages() {
+  document.querySelectorAll("img").forEach(img => {
+    if (img.complete) img.classList.add("is-loaded");
+  });
+}
+
+// „Adaugă în coș”: ~1,2s bifă + „Adăugat” (aceeași lățime), apoi revine.
+// Cât timp arată „Adăugat”, butonul nu poate fi apăsat din nou (vezi isButtonBusy).
+function showAddedFeedback(button, onDone) {
+  if (!button) return;
+  const original = button.innerHTML;
+  button.dataset.busy = "true";
+  button.style.width = button.offsetWidth + "px"; // lățimea nu se schimbă
+  button.classList.add("is-added");
+  button.innerHTML = `${icon("check", "icon-sm")}<span>Adăugat</span>`;
+
+  setTimeout(() => {
+    button.innerHTML = original;
+    button.style.width = "";
+    button.classList.remove("is-added");
+    delete button.dataset.busy;
+    if (onDone) onDone();
+  }, 1200);
+}
+
+function isButtonBusy(button) {
+  return Boolean(button && button.dataset.busy);
+}
+
+// Numărul de pe iconița coșului face un mic „puls”
+function pulseCartCount() {
+  animate(document.querySelector(".cart-count"),
+    [{ transform: "scale(1)" }, { transform: "scale(1.2)" }, { transform: "scale(1)" }],
+    { duration: cssMs("--dur-slow"), easing: cssEase() });
+}
+
+// Un text se schimbă cu un fade scurt (doar dacă s-a schimbat de fapt)
+function setTextWithFade(element, text) {
+  if (element.textContent === text) return;
+  const hadText = element.textContent !== "";
+  element.textContent = text;
+  if (hadText) animate(element, [{ opacity: 0 }, { opacity: 1 }], { duration: cssMs("--dur-fast"), easing: cssEase() });
+}
+
+// Schimbă poza fără „clipire”: încarcă întâi poza nouă, apoi o arată cu fade
+function swapImage(img, src) {
+  if (!img || img.getAttribute("src") === src) return;
+  img.dataset.nextSrc = src;
+  const loader = new Image();
+  const show = () => {
+    if (img.dataset.nextSrc !== src) return; // între timp s-a ales altă poză
+    img.src = src;
+    animate(img, [{ opacity: 0 }, { opacity: 1 }], { duration: cssMs("--dur-fast"), easing: cssEase() });
+  };
+  loader.onload = show;
+  loader.onerror = show;
+  loader.src = src;
+}
+
+// O cifră (grame) „curge” de la valoarea veche la cea nouă
+function countUpWeight(element, from, to) {
+  if (prefersReducedMotion() || from === to) {
+    element.textContent = showWeight(to);
+    return;
+  }
+  const duration = cssMs("--dur-slow");
+  const start = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out
+    element.textContent = showWeight(Math.round(from + (to - from) * eased));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// Catalog: cardurile noi apar cu fade, cu 20ms între ele (doar primele 8)
+function animateCardsIn(container) {
+  [...container.children].forEach((card, i) => {
+    animate(card, [{ opacity: 0 }, { opacity: 1 }], {
+      duration: cssMs("--dur-fast"),
+      delay: i < 8 ? i * 20 : 0,
+      easing: cssEase(),
+      fill: "backwards"
+    });
+  });
+}
+
+// Barele (livrare gratuită, greutate) pornesc de la lățimea veche spre cea nouă.
+// oldWidths = { cheie: "42%" } citite înainte să redesenăm coșul.
+function readBarWidths() {
+  const widths = {};
+  document.querySelectorAll("[data-bar]").forEach(el => { widths[el.dataset.bar] = el.style.width; });
+  return widths;
+}
+
+function animateBarsFrom(oldWidths) {
+  document.querySelectorAll("[data-bar]").forEach(el => {
+    const target = el.style.width;
+    const from = oldWidths[el.dataset.bar] || "0%";
+    if (from === target) return;
+    el.style.width = from;
+    el.getBoundingClientRect(); // forțăm browserul să „vadă” lățimea veche
+    el.style.width = target;    // tranziția din CSS face restul
+  });
 }
 
 
@@ -82,6 +227,15 @@ function getMinWeight(product) {
 function hasDifferentPrices(product) {
   const prices = product.variants.map(v => v.price);
   return Math.min(...prices) !== Math.max(...prices);
+}
+
+// Prețul redus + prețul vechi tăiat (kit-uri). Același HTML peste tot;
+// stilul e în clasele .price-pair / .price--sale / .price-old din style.css.
+function salePriceHTML(price, fullPrice) {
+  return `<span class="price-pair">` +
+    `<span class="price--sale"><span class="visually-hidden">Preț redus: </span>${showPrice(price)}</span>` +
+    `<s class="price-old"><span class="visually-hidden">Preț vechi: </span>${showPrice(fullPrice)}</s>` +
+    `</span>`;
 }
 
 // Banda neagră de sus. Sub 480px se vede doar textul scurt (vezi CSS).
@@ -595,7 +749,7 @@ function kitCard(kit) {
     <article class="kit-card" id="${kit.id}">
       <div class="kit-mosaic kit-mosaic-${cells.length}">${cells.join("")}</div>
       <div class="kit-body">
-        <p class="eyebrow">Kit · −${discountPercent}%</p>
+        <p><span class="badge">Kit · −${discountPercent}%</span></p>
         <h3>${kit.name}</h3>
         <!-- Doar pe telefon (cardul compact): „4 produse · 1,22 kg” -->
         <p class="kit-meta">${countLabel(kit.items.length, "produs", "produse")} · ${showWeight(totals.weight)}</p>
@@ -603,10 +757,7 @@ function kitCard(kit) {
         <ul class="kit-items">${itemRows}</ul>
         <div class="kit-totals">
           <p class="kit-weight">Greutate totală <strong>${showWeight(totals.weight)}</strong></p>
-          <p class="kit-price">
-            <span class="price-now">${showPrice(totals.price)}</span>
-            <span class="price-old"><span class="visually-hidden">Preț întreg: </span><s>${showPrice(totals.fullPrice)}</s></span>
-          </p>
+          <p class="kit-price">${salePriceHTML(totals.price, totals.fullPrice)}</p>
         </div>
         ${available
           ? `<button class="btn btn-secondary btn-block" type="button" data-add-kit="${kit.id}">Adaugă kitul</button>`
@@ -674,6 +825,7 @@ function initCatalog() {
     Object.assign(filters, newFilters);
     writeFiltersToURL(filters);
     renderCatalog(filters);
+    animateCardsIn(document.getElementById("catalog-grid"));
   });
 
   // Formularul nu trebuie să reîncarce pagina (ex: Enter într-un câmp)
@@ -691,6 +843,7 @@ function initCatalog() {
     }
     writeFiltersToURL(filters);
     renderCatalog(filters);
+    animateCardsIn(document.getElementById("catalog-grid"));
     document.getElementById("catalog-title").focus();
   });
 }
@@ -1185,7 +1338,7 @@ function setupGallery() {
     thumb.addEventListener("click", () => {
       const { product, color } = productState;
       productState.imageIndex = Number(thumb.dataset.index);
-      mainImage.src = getProductImages(product, color && color.id)[productState.imageIndex];
+      swapImage(mainImage, getProductImages(product, color && color.id)[productState.imageIndex]);
       thumbs.forEach(t => t.setAttribute("aria-pressed", t === thumb));
     });
   });
@@ -1198,7 +1351,7 @@ function showColorImages() {
   const { product, color, imageIndex } = productState;
   const images = getProductImages(product, color && color.id);
 
-  document.getElementById("main-image").src = images[imageIndex];
+  swapImage(document.getElementById("main-image"), images[imageIndex]);
   document.getElementById("buy-bar-image").src = images[0];
   document.querySelectorAll(".thumb img").forEach((img, i) => {
     img.src = images[i];
@@ -1235,15 +1388,19 @@ function setupAddToCart() {
   setupBuyBar();
   if (!productState.product.inStock) return; // butoanele sunt dezactivate
 
-  document.getElementById("add-to-cart").addEventListener("click", addCurrentProductToCart);
-  document.getElementById("buy-bar-button").addEventListener("click", addCurrentProductToCart);
+  document.getElementById("add-to-cart").addEventListener("click", event => addCurrentProductToCart(event.currentTarget));
+  document.getElementById("buy-bar-button").addEventListener("click", event => addCurrentProductToCart(event.currentTarget));
 }
 
 // Salvează varianta, culoarea și cantitatea alese, apoi deschide sertarul
-function addCurrentProductToCart() {
+function addCurrentProductToCart(button) {
+  if (isButtonBusy(button)) return; // „Adăugat” încă se vede: ignorăm al doilea click
   const { product, variant, color, quantity } = productState;
   const key = addProductToCart(product.id, variant.id, color ? color.id : null, quantity);
   updateCartCount();
+  // după 1,2s, butonul principal își recapătă textul cu prețul actual
+  showAddedFeedback(button, updateProductDetails);
+  pulseCartCount();
   openCartDrawer(key);
 }
 
@@ -1300,9 +1457,9 @@ function setQuantity(value) {
 function updateProductDetails() {
   const { product, variant, color, quantity } = productState;
 
-  document.getElementById("product-price").textContent = showPrice(variant.price);
+  setTextWithFade(document.getElementById("product-price"), showPrice(variant.price));
+  setTextWithFade(document.getElementById("product-weight"), showWeight(variant.weight));
   document.getElementById("buy-bar-price").textContent = showPrice(variant.price);
-  document.getElementById("product-weight").textContent = showWeight(variant.weight);
   document.getElementById("spec-rows").innerHTML = specRowsHTML(product, variant);
 
   // Numele variantei și al culorii de lângă etichete
@@ -1333,8 +1490,10 @@ function updateProductDetails() {
   document.getElementById("qty-input").value = quantity;
   document.querySelector('[data-step="-1"]').disabled = quantity <= 1;
   document.querySelector('[data-step="1"]').disabled = quantity >= MAX_QUANTITY;
-  document.getElementById("add-to-cart").textContent =
-    "Adaugă în coș · " + showPrice(variant.price * quantity);
+  const addButton = document.getElementById("add-to-cart");
+  if (!isButtonBusy(addButton)) {
+    addButton.textContent = "Adaugă în coș · " + showPrice(variant.price * quantity);
+  }
 }
 
 
@@ -1391,7 +1550,7 @@ function freeShippingHTML(subtotal) {
   return `
     <p>${text}</p>
     <div class="progress" aria-hidden="true">
-      <div class="progress-fill" style="width: ${percent}%"></div>
+      <div class="progress-fill" data-bar="shipping" style="width: ${percent}%"></div>
     </div>`;
 }
 
@@ -1399,10 +1558,12 @@ function freeShippingHTML(subtotal) {
 function setupKitButtons() {
   document.addEventListener("click", event => {
     const button = event.target.closest("[data-add-kit]");
-    if (!button) return;
+    if (!button || isButtonBusy(button)) return;
 
     const key = addKitToCart(button.dataset.addKit);
     updateCartCount();
+    showAddedFeedback(button);
+    pulseCartCount();
     openCartDrawer(key);
   });
 }
@@ -1433,8 +1594,14 @@ function createCartDrawer() {
   // Se închide la click pe fundal (în afara panoului) sau pe un buton „închide”
   drawer.addEventListener("click", event => {
     if (event.target === drawer || event.target.closest("[data-close-drawer]")) {
-      drawer.close();
+      closeDrawer(drawer);
     }
+  });
+
+  // Escape: în loc de închiderea bruscă a browserului, folosim animația de ieșire
+  drawer.addEventListener("cancel", event => {
+    event.preventDefault();
+    closeDrawer(drawer);
   });
 
   document.body.appendChild(drawer);
@@ -1442,6 +1609,20 @@ function createCartDrawer() {
 }
 
 // Deschide sertarul și arată rândul din coș cu cheia `key`
+// Închide sertarul cu animația de ieșire (clasa is-closing din CSS), apoi de tot
+function closeDrawer(drawer) {
+  if (!drawer.open || drawer.classList.contains("is-closing")) return;
+  if (prefersReducedMotion()) {
+    drawer.close();
+    return;
+  }
+  drawer.classList.add("is-closing");
+  setTimeout(() => {
+    drawer.classList.remove("is-closing");
+    drawer.close();
+  }, cssMs("--dur-fast"));
+}
+
 // Deschide sertarul și arată rândul (sau rândurile) din coș cu cheile date.
 // keys = o cheie (de pe pagina de produs) sau o listă de chei (din ghid).
 function openCartDrawer(keys) {
@@ -1463,7 +1644,10 @@ function openCartDrawer(keys) {
         <div>
           <p class="drawer-item-name">${line.name}</p>
           ${options ? `<p class="drawer-item-meta">${options}</p>` : ""}
-          <p class="drawer-item-meta">În coș: ${line.quantity} buc. · ${showPrice(line.lineTotal)}</p>
+          <p class="drawer-item-meta">În coș: ${line.quantity} buc.</p>
+          <p class="drawer-item-price">${line.type === "kit"
+            ? salePriceHTML(line.lineTotal, line.unitFullPrice * line.quantity)
+            : showPrice(line.lineTotal)}</p>
         </div>
       </li>`;
   }).join("");
@@ -1507,11 +1691,23 @@ function initCart() {
       setCartQuantity(key, line.quantity - 1);
       announce(line.name + ": " + Math.max(1, line.quantity - 1) + " buc.");
     } else if (action === "remove") {
-      removeFromCart(key);
-      announce(line.name + " a fost șters din coș.");
+      // Rândul dispare cu fade + mică alunecare, abia apoi îl scoatem din coș
+      const row = button.closest(".cart-row");
+      if (row.dataset.removing) return;
+      row.dataset.removing = "true";
+      animate(row, [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateX(16px)" }],
+        { duration: cssMs("--dur"), easing: "ease-in", fill: "forwards" })
+        .then(() => {
+          removeFromCart(key);
+          announce(line.name + " a fost șters din coș.");
+          updateCartCount();
+          renderCart({ key, action });
+        });
+      return;
     } else if (action === "add-kit") {
       addKitToCart(button.dataset.kit);
       announce("Kitul a fost adăugat în coș.");
+      pulseCartCount();
     }
 
     updateCartCount();
@@ -1522,6 +1718,7 @@ function initCart() {
 // Desenează tot coșul din nou, din localStorage.
 // focusTarget = butonul apăsat, ca să-i putem da focusul înapoi după redesenare.
 function renderCart(focusTarget) {
+  const oldBarWidths = readBarWidths(); // pentru animația barelor
   const lines = getCartLines(loadCart());
   const totals = getCartTotals(lines);
   const isEmpty = lines.length === 0;
@@ -1547,7 +1744,11 @@ function renderCart(focusTarget) {
   kitBox.hidden = !kitHTML;
   kitBox.innerHTML = kitHTML;
 
-  if (focusTarget) restoreCartFocus(focusTarget);
+  // Doar după o schimbare (nu la prima afișare) barele își animă lățimea
+  if (focusTarget) {
+    animateBarsFrom(oldBarWidths);
+    restoreCartFocus(focusTarget);
+  }
 }
 
 // După redesenare, punem focusul înapoi pe butonul apăsat (sau pe ceva apropiat)
@@ -1585,7 +1786,7 @@ function cartRowHTML(line) {
       const label = product.variants.length > 1 ? product.name + " · " + variant.label : product.name;
       return `<li>${label}</li>`;
     }).join("") + "</ul>";
-    oldPrice = `<span class="price-old"><span class="visually-hidden">Preț întreg: </span><s>${showPrice(line.unitFullPrice * line.quantity)}</s></span>`;
+    oldPrice = "kit"; // prețul redus se scrie mai jos, cu salePriceHTML()
   }
 
   return `
@@ -1608,7 +1809,7 @@ function cartRowHTML(line) {
             aria-label="Crește cantitatea: ${line.name}"${line.quantity >= MAX_QUANTITY ? " disabled" : ""}>+</button>
         </div>
         <button class="text-btn" type="button" data-key="${line.key}" data-action="remove">Șterge<span class="visually-hidden"> ${line.name}</span></button>
-        <p class="cart-row-total">${showPrice(line.lineTotal)}${oldPrice}</p>
+        <p class="cart-row-total">${oldPrice ? salePriceHTML(line.lineTotal, line.unitFullPrice * line.quantity) : showPrice(line.lineTotal)}</p>
       </div>
     </li>`;
 }
@@ -1617,7 +1818,7 @@ function cartRowHTML(line) {
 function weightBoxHTML(lines, totalWeight) {
   const segments = lines.map((line, i) => {
     const percent = (line.lineWeight / totalWeight) * 100;
-    return `<span class="weight-segment seg-${i % 4}" style="width: ${percent}%"></span>`;
+    return `<span class="weight-segment seg-${i % 4}" data-bar="${line.key}" style="width: ${percent}%"></span>`;
   }).join("");
 
   const legend = lines.map((line, i) => {
@@ -1664,10 +1865,7 @@ function kitSuggestionHTML(lines) {
     <p class="kit-suggestion-text">${intro}</p>
     <div class="kit-totals">
       <p class="kit-weight">Greutate totală <strong>${showWeight(totals.weight)}</strong></p>
-      <p class="kit-price">
-        <span class="price-now">${showPrice(totals.price)}</span>
-        <span class="price-old"><span class="visually-hidden">Preț întreg: </span><s>${showPrice(totals.fullPrice)}</s></span>
-      </p>
+      <p class="kit-price">${salePriceHTML(totals.price, totals.fullPrice)}</p>
     </div>
     <button class="btn btn-secondary btn-block" type="button" data-action="add-kit" data-kit="${kit.id}">Adaugă kitul</button>
     <a class="text-link kit-suggestion-link" href="catalog.html?cat=kituri#${kit.id}">Vezi ce conține kitul</a>`;
@@ -1832,7 +2030,9 @@ function toOrderItems(lines) {
     images: line.images,
     options: lineOptionsText(line),
     quantity: line.quantity,
-    lineTotal: line.lineTotal
+    lineTotal: line.lineTotal,
+    // la kit-uri: prețul întreg, ca reducerea să se vadă și pe confirmare
+    lineFullTotal: line.type === "kit" ? line.unitFullPrice * line.quantity : null
   }));
 }
 
@@ -1845,7 +2045,9 @@ function orderSummaryHTML(items, totals) {
         <p class="order-item-name">${item.name}</p>
         <p class="order-item-meta">${item.options ? item.options + " · " : ""}${item.quantity} buc.</p>
       </div>
-      <p class="order-item-price">${showPrice(item.lineTotal)}</p>
+      <p class="order-item-price">${item.lineFullTotal
+        ? salePriceHTML(item.lineTotal, item.lineFullTotal)
+        : showPrice(item.lineTotal)}</p>
     </li>`).join("");
 
   return `
@@ -1966,13 +2168,16 @@ function initGuide() {
     current[box.dataset.list] = current[box.dataset.list] || {};
     current[box.dataset.list][box.dataset.product] = box.checked;
     saveGuideChecks(current);
-    updateGuideTotal(GUIDE_LISTS.find(l => l.id === box.dataset.list));
+    if (box.checked) {
+      animate(box, [{ transform: "scale(0.6)" }, { transform: "scale(1)" }], { duration: cssMs("--dur-fast"), easing: cssEase() });
+    }
+    updateGuideTotal(GUIDE_LISTS.find(l => l.id === box.dataset.list), true);
   });
 
   // „Adaugă produsele bifate în coș”
   panels.addEventListener("click", event => {
     const button = event.target.closest("[data-add-list]");
-    if (button) addGuideListToCart(GUIDE_LISTS.find(l => l.id === button.dataset.addList));
+    if (button && !isButtonBusy(button)) addGuideListToCart(GUIDE_LISTS.find(l => l.id === button.dataset.addList), button);
   });
 }
 
@@ -2027,18 +2232,26 @@ function guidePanelHTML(list, checks, isActive) {
 }
 
 // Totalul se calculează doar din rândurile bifate
-function updateGuideTotal(list) {
+// animated = true doar la bifare (la încărcarea paginii totalul apare direct)
+function updateGuideTotal(list, animated) {
   const checks = loadGuideChecks();
   const checked = list.items.filter(item => isGuideChecked(checks, list.id, item.productId));
   const weight = checked.reduce((sum, item) => sum + getLightestVariant(getProduct(item.productId)).weight, 0);
 
-  document.getElementById("guide-total-" + list.id).textContent = showWeight(weight);
+  const total = document.getElementById("guide-total-" + list.id);
+  const previous = Number(total.dataset.grams || weight);
+  total.dataset.grams = weight;
+  if (animated) {
+    countUpWeight(total, previous, weight);
+  } else {
+    total.textContent = showWeight(weight);
+  }
   document.getElementById("guide-count-" + list.id).textContent =
     `${checked.length} din ${list.items.length} bifate`;
 }
 
 // Adaugă în coș produsele bifate care sunt în stoc, apoi deschide sertarul
-function addGuideListToCart(list) {
+function addGuideListToCart(list, button) {
   const checks = loadGuideChecks();
   const status = document.getElementById("guide-status-" + list.id);
   const checked = list.items.filter(item => isGuideChecked(checks, list.id, item.productId));
@@ -2065,6 +2278,8 @@ function addGuideListToCart(list) {
   }
 
   updateCartCount();
+  showAddedFeedback(button);
+  pulseCartCount();
   openCartDrawer(keys);
 }
 
@@ -2102,6 +2317,7 @@ function setupGuideTabs() {
 /* ---------- 15. Pornire ---------- */
 
 // Scripturile sunt la finalul <body>, deci pagina e deja încărcată.
+setupImageFade();
 renderHeader();
 renderFooter();
 
@@ -2116,3 +2332,7 @@ if (page === "cart") initCart();
 if (page === "checkout") initCheckout();
 if (page === "confirmation") initConfirmation();
 if (page === "guide") initGuide();
+
+// Pozele care erau deja încărcate (din cache) apar imediat
+markLoadedImages();
+window.addEventListener("load", markLoadedImages);
