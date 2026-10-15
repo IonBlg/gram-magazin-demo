@@ -316,6 +316,24 @@ function hasDifferentPrices(product) {
   return Math.min(...prices) !== Math.max(...prices);
 }
 
+// Imagini responsive: fiecare poză de produs (960×1200) are și o variantă
+// de 480×600 cu sufixul -480 (făcută cu tools/variante-480.py).
+// sizes = cât de lată apare poza pe ecran; browserul alege varianta potrivită.
+const IMAGE_SIZES = {
+  card: "(max-width: 767px) 45vw, 300px",       // cardurile de produs
+  category: "(max-width: 767px) 120px, 200px",  // cardurile de categorii
+  mosaic: "(max-width: 767px) 48px, 160px",     // mozaicul kit-urilor
+  thumb: "96px"                                  // miniaturi (coș, sertar, galerie, meniu)
+};
+
+function smallImage(src) {
+  return src.replace(/\.jpg$/, "-480.jpg");
+}
+
+function srcsetAttrs(src, sizes) {
+  return `srcset="${smallImage(src)} 480w, ${src} 960w" sizes="${sizes}"`;
+}
+
 // Prețul redus + prețul vechi tăiat (kit-uri). Același HTML peste tot;
 // stilul e în clasele .price-pair / .price--sale / .price-old din style.css.
 function salePriceHTML(price, fullPrice) {
@@ -497,7 +515,7 @@ function catalogPanelHTML() {
     return `
       <li>
         <a class="panel-cat" href="catalog.html?cat=${category.id}">
-          <img src="${info.image}" alt="" width="48" height="60" loading="lazy">
+          <img src="${info.image}" ${srcsetAttrs(info.image, IMAGE_SIZES.thumb)} alt="" width="48" height="60" loading="lazy">
           <span>
             <span class="panel-cat-name">${category.name}</span>
             <span class="panel-cat-meta">${countLabel(info.count, "produs", "produse")} · de la ${showWeight(info.minWeight)}</span>
@@ -758,10 +776,13 @@ function productCard(product, lazy = true) {
   const minWeight = getMinWeight(product);
   const variantCount = product.variants.length;
 
-  // Rândul tehnic: „86 g” sau „de la 890 g · 3 variante”
+  // Rândul tehnic: „86 g” sau „de la 890 g · 3 variante”.
+  // Pe telefon (CSS) greutatea și variantele stau pe două rânduri, fără „·”.
   let techLine = showWeight(minWeight);
   if (variantCount > 1) {
-    techLine = "de la " + showWeight(minWeight) + " · " + countLabel(variantCount, "variantă", "variante");
+    techLine = `<span class="tech-weight">de la ${showWeight(minWeight)}</span>` +
+      `<span class="tech-sep"> · </span>` +
+      `<span class="tech-variants">${countLabel(variantCount, "variantă", "variante")}</span>`;
   }
 
   // Prețul: „de la 1 950 lei” doar dacă variantele costă diferit
@@ -781,7 +802,7 @@ function productCard(product, lazy = true) {
   return `
     <a class="product-card${product.inStock ? "" : " is-sold-out"}" href="produs.html?id=${product.id}">
       <div class="card-media">
-        <img src="${product.images[0]}" alt="${product.name}" width="1200" height="1500"
+        <img src="${product.images[0]}" ${srcsetAttrs(product.images[0], IMAGE_SIZES.card)} alt="${product.name}" width="1200" height="1500"
           ${lazy ? 'loading="lazy"' : ""}>
         ${badge}
       </div>
@@ -801,7 +822,7 @@ function categoryCard(category) {
 
   return `
     <a class="category-card" href="catalog.html?cat=${category.id}">
-      <img src="${first.images[0]}" alt="${first.name}" width="1200" height="1500" loading="lazy">
+      <img src="${first.images[0]}" ${srcsetAttrs(first.images[0], IMAGE_SIZES.category)} alt="${first.name}" width="1200" height="1500" loading="lazy">
       <div class="category-card-body">
         <h3>${category.name}</h3>
         <span class="eyebrow">${countLabel(products.length, "produs", "produse")}</span>
@@ -821,7 +842,7 @@ function kitCard(kit) {
   const cells = [];
   kit.items.slice(0, 4).forEach(item => {
     const product = getProduct(item.productId);
-    cells.push(`<img src="${product.images[0]}" alt="${product.name}" width="1200" height="1500" loading="lazy">`);
+    cells.push(`<img src="${product.images[0]}" ${srcsetAttrs(product.images[0], IMAGE_SIZES.mosaic)} alt="${product.name}" width="1200" height="1500" loading="lazy">`);
   });
 
   // Lista: „Rucsac Creasta · 20 L ........ 890 g”
@@ -1235,7 +1256,7 @@ function galleryHTML(product) {
       <li>
         <button class="thumb" type="button" data-index="${i}" aria-pressed="${i === 0}"
           aria-label="Poza ${i + 1} din ${product.images.length}">
-          <img src="${src}" alt="" width="1200" height="1500">
+          <img src="${src}" ${srcsetAttrs(src, IMAGE_SIZES.thumb)} alt="" width="1200" height="1500">
         </button>
       </li>`).join("");
     thumbs = `<ul class="thumbs">${buttons}</ul>`;
@@ -1245,7 +1266,7 @@ function galleryHTML(product) {
   return `
     <div class="gallery">
       <div class="gallery-main">
-        <img class="product-img" id="main-image" src="${product.images[0]}" alt="${product.name}" width="1200" height="1500">
+        <img class="product-img" id="main-image" src="${product.images[0]}" alt="${product.name}" width="1200" height="1500" fetchpriority="high">
       </div>
       ${thumbs}
     </div>`;
@@ -1333,7 +1354,7 @@ function buyBarHTML(product) {
 
   return `
     <div class="buy-bar" id="buy-bar" role="region" aria-label="Cumpără rapid">
-      <img class="buy-bar-image" id="buy-bar-image" src="${product.images[0]}" alt="" width="40" height="50">
+      <img class="buy-bar-image" id="buy-bar-image" src="${product.images[0]}" ${srcsetAttrs(product.images[0], IMAGE_SIZES.thumb)} alt="" width="40" height="50">
       <div class="buy-bar-price">
         <span class="eyebrow">${product.name}</span>
         <span class="buy-bar-amount" id="buy-bar-price"></span>
@@ -1442,10 +1463,19 @@ function showColorImages() {
   const images = getProductImages(product, color && color.id);
 
   swapImage(document.getElementById("main-image"), images[imageIndex]);
-  document.getElementById("buy-bar-image").src = images[0];
+  setImageSource(document.getElementById("buy-bar-image"), images[0]);
   document.querySelectorAll(".thumb img").forEach((img, i) => {
-    img.src = images[i];
+    setImageSource(img, images[i]);
   });
+}
+
+// Schimbă poza unei imagini cu srcset: src ȘI srcset (altfel browserul
+// ar continua să afișeze varianta din srcset-ul vechi)
+function setImageSource(img, src) {
+  img.src = src;
+  if (img.hasAttribute("srcset")) {
+    img.srcset = `${smallImage(src)} 480w, ${src} 960w`;
+  }
 }
 
 // Preîncarcă toate pozele culorilor, ca schimbarea culorii să fie instantă
@@ -1608,10 +1638,10 @@ function thumbHTML(item) {
   const images = item.images || [item.image];
 
   if (images.length < 2) {
-    return `<img src="${images[0]}" alt="" width="1200" height="1500">`;
+    return `<img src="${images[0]}" ${srcsetAttrs(images[0], IMAGE_SIZES.thumb)} alt="" width="1200" height="1500">`;
   }
 
-  const cells = images.slice(0, 4).map(src => `<img src="${src}" alt="" width="1200" height="1500">`);
+  const cells = images.slice(0, 4).map(src => `<img src="${src}" ${srcsetAttrs(src, IMAGE_SIZES.thumb)} alt="" width="1200" height="1500">`);
   while (cells.length < 4) cells.push("<span></span>"); // căsuță goală
   return `<span class="thumb-mosaic">${cells.join("")}</span>`;
 }

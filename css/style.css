@@ -3712,6 +3712,45 @@ html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(8) { animati
 }
 
 
+/* ---------- 32. Ajustări: rândul tehnic pe card, tipărire ---------- */
+
+/* Pe telefon: „de la 1,75 kg” pe primul rând, „2 variante” pe al doilea, fără „·” */
+@media (max-width: 767px) {
+  .card-tech .tech-weight,
+  .card-tech .tech-variants {
+    display: block;
+  }
+
+  .card-tech .tech-sep {
+    display: none;
+  }
+}
+
+/* La tipărire: tot conținutul vizibil, fără animații */
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  [data-reveal],
+  .js-reveal [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .section-head::before {
+    transform: none !important;
+  }
+
+  .js-fade img {
+    opacity: 1 !important;
+  }
+}
+
+
 /* ---------- 99. Mișcare redusă ---------- */
 
 /* Dacă utilizatorul a cerut mai puțină mișcare: nicio tranziție, nicio animație,
