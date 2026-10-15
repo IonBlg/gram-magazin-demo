@@ -1,0 +1,26 @@
+# _headers — fișier citit doar de Cloudflare Pages (GitHub Pages îl ignoră).
+# Fiecare bloc: o adresă (cu * = orice), apoi headerele trimise pentru ea.
+
+# Pozele: browserul le poate păstra o săptămână (604 800 secunde).
+# Nu au ?v= în nume, deci nu le ținem mai mult: dacă schimbăm o poză,
+# vizitatorii o văd pe cea nouă în cel mult o săptămână.
+/images/*
+  Cache-Control: public, max-age=604800
+
+# CSS și JS: păstrate un an și marcate „immutable” (nu se mai verifică).
+# E sigur pentru că paginile le încarcă cu ?v=... : la fiecare schimbare
+# mărim numărul, deci adresa e alta și browserul descarcă fișierul nou.
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Pe toate paginile:
+# - nosniff: browserul nu „ghicește” tipul unui fișier (ex: nu tratează
+#   un text ca script) — o protecție de bază;
+# - Referrer-Policy: când cineva pleacă de pe site, celălalt site află doar
+#   domeniul (gram-magazin-demo.pages.dev), nu adresa completă a paginii.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

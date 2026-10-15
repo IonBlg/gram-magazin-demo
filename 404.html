@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <!-- Doar aici: GitHub Pages arată 404.html la orice adresă greșită, oricât de adâncă;
-       <base> face ca css/, js/ și linkurile să pornească mereu din folderul site-ului -->
-  <base href="/gram-magazin-demo/">
+  <!-- Doar aici: 404.html apare la orice adresă greșită, oricât de adâncă (ex: /a/b).
+       <base> face ca css/, js/ și linkurile să pornească din folderul site-ului:
+       pe GitHub Pages site-ul e în /gram-magazin-demo/, pe Cloudflare Pages la rădăcină (/). -->
+  <script>
+    (function () {
+      var base = document.createElement("base");
+      base.href = location.hostname.endsWith("github.io") ? "/gram-magazin-demo/" : "/";
+      document.head.appendChild(base);
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pagina nu există — Gram (magazin demo)</title>
@@ -15,8 +22,8 @@
   <meta property="og:locale" content="ro_RO">
   <meta property="og:title" content="Pagina nu există — Gram (magazin demo)">
   <meta property="og:description" content="Pagina căutată nu există în magazinul demo Gram. Întoarce-te la pagina principală sau la catalog.">
-  <meta property="og:url" content="https://ionblg.github.io/gram-magazin-demo/404.html">
-  <meta property="og:image" content="https://ionblg.github.io/gram-magazin-demo/images/og-gram.jpg">
+  <meta property="og:url" content="https://gram-magazin-demo.pages.dev/404">
+  <meta property="og:image" content="https://gram-magazin-demo.pages.dev/images/og-gram.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Echipament de hiking pe fundal deschis: rucsac, frontală, cană, bețe pliate, busolă și spork">
@@ -24,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026101505">
+  <link rel="stylesheet" href="css/style.css?v=2026101506">
 </head>
 <body data-page="not-found">
   <!-- Fără „Sari la conținut” aici: din cauza <base>, href="#main" ar duce la pagina Acasă -->
@@ -45,8 +52,8 @@
 
   <footer id="site-footer"></footer>
 
-  <script src="js/products.js?v=2026101505"></script>
-  <script src="js/cart.js?v=2026101505"></script>
-  <script src="js/main.js?v=2026101505"></script>
+  <script src="js/products.js?v=2026101506"></script>
+  <script src="js/cart.js?v=2026101506"></script>
+  <script src="js/main.js?v=2026101506"></script>
 </body>
 </html>

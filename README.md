@@ -2,7 +2,9 @@
 
 **Gram** este un magazin online demonstrativ, făcut ca proiect de portofoliu. Produsele, prețurile și greutățile sunt inventate, nu se vinde nimic real și nu se fac plăți. Ideea magazinului: la echipamentul de munte contează fiecare gram, așa că greutatea apare peste tot — pe card, pe variantă, în coș.
 
-**Site live:** https://ionblg.github.io/gram-magazin-demo/
+**Site live:** https://gram-magazin-demo.pages.dev/ (Cloudflare Pages)
+
+Copie veche, încă pornită: https://ionblg.github.io/gram-magazin-demo/ (GitHub Pages)
 
 Proiect realizat de Ion Beșleaga.
 
@@ -35,6 +37,7 @@ HTML, CSS și JavaScript **vanilla** — fără framework-uri, fără npm, făr�
 ├── ghid.html         Ghid de echipament (listă cu bife, greutate totală)
 ├── credite.html      Autorii pozelor
 ├── 404.html          Pagina „nu există”
+├── _headers          Cache și headere de securitate (Cloudflare Pages)
 ├── css/style.css     Tot stilul, un singur fișier
 ├── js/products.js    „Baza de date”: produse, categorii, kit-uri
 ├── js/cart.js        Coșul (localStorage) și comanda de test
@@ -53,9 +56,15 @@ python3 -m http.server
 
 apoi deschide `http://localhost:8000`.
 
+## Cum se publică
+
+Site-ul e pe **Cloudflare Pages**, legat de acest repository (branch `main`, fără pas de build: comanda `exit 0`, folderul publicat `/`). **Fiecare `git push` pe `main` publică automat** site-ul, în câteva zeci de secunde. Se publică doar fișierele din git: ce e în `.gitignore` rămâne doar local.
+
+Fișierul `_headers` din rădăcină e citit de Cloudflare: cache-ul pentru poze, CSS și JS și câteva headere de securitate (explicate în comentarii în fișier).
+
 ## Versiunea fișierelor (contra cache-ului)
 
-În toate paginile, `css/style.css` și fișierele din `js/` sunt încărcate cu un număr de versiune, de exemplu `css/style.css?v=2026101505`. **La fiecare schimbare de CSS sau JS, numărul se mărește** (pe toate paginile), ca browserele vizitatorilor să descarce fișierele noi în loc să le folosească pe cele vechi din cache. Formatul folosit: anul, luna, ziua + un număr de ordine (`2026101505`).
+În toate paginile, `css/style.css` și fișierele din `js/` sunt încărcate cu un număr de versiune, de exemplu `css/style.css?v=2026101506`. **La fiecare schimbare de CSS sau JS, numărul se mărește** (pe toate paginile), ca browserele vizitatorilor să descarce fișierele noi în loc să le folosească pe cele vechi din cache. Formatul folosit: anul, luna, ziua + un număr de ordine (`2026101506`).
 
 ## Limitări (e un demo)
 
@@ -65,4 +74,4 @@ apoi deschide `http://localhost:8000`.
 
 ## Credite
 
-Pozele produselor și ale paginilor sunt generate cu inteligență artificială (Google Gemini); unele variante de culoare sunt aceeași poză recolorată digital. Produsele din magazin sunt inventate și nu există în realitate. Detalii: [credite.html](https://ionblg.github.io/gram-magazin-demo/credite.html).
+Pozele produselor și ale paginilor sunt generate cu inteligență artificială (Google Gemini); unele variante de culoare sunt aceeași poză recolorată digital. Produsele din magazin sunt inventate și nu există în realitate. Detalii: [credite](https://gram-magazin-demo.pages.dev/credite).

@@ -1120,6 +1120,23 @@ function setupFiltersToggle() {
   });
 }
 
+// Adresa publică a site-ului (Cloudflare Pages; acolo adresele sunt fără .html)
+const SITE_URL = "https://gram-magazin-demo.pages.dev/";
+
+// <link rel="canonical">: adresa „oficială” a paginii, pentru motoarele de căutare.
+// Pe produs o punem din JS, ca să includă produsul (?id=...).
+function setCanonical(path) {
+  let link = document.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "canonical";
+    document.head.appendChild(link);
+  }
+  link.href = SITE_URL + path;
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl) ogUrl.setAttribute("content", SITE_URL + path);
+}
+
 // Schimbă <title> și descrierea paginii
 function setPageTitle(name, description) {
   document.title = name + " — Gram (magazin demo)";
@@ -1167,6 +1184,7 @@ function initProduct() {
   productState.imageIndex = 0; // ce miniatură e selectată în galerie
 
   setPageTitle(product.name, product.short + " " + product.description);
+  setCanonical("produs?id=" + encodeURIComponent(product.id));
   root.innerHTML = productPageHTML(product);
 
   setupGallery();
