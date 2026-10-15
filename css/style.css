@@ -49,11 +49,23 @@
   --dur: 220ms;
   --dur-slow: 300ms;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1); /* ease-out, pentru intrări; ieșirile folosesc ease-in */
+
+  /* Animațiile de intrare și aparițiile la scroll */
+  --dur-reveal: 450ms;  /* apariție la scroll */
+  --dur-hero: 700ms;    /* poza hero se „descoperă” */
+  --ease-enter: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --enter-shift: 16px;  /* cât urcă un element când apare (8px pe telefon) */
 }
 
 @media (min-width: 768px) {
   :root {
     --gutter: 24px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --enter-shift: 8px;
   }
 }
 
@@ -171,14 +183,26 @@ ol[class] {
 
 /* Capul de secțiune: linie groasă deasupra, titlu + link în dreapta */
 .section-head {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2) var(--space-4);
   margin-bottom: var(--space-5);
-  padding-top: var(--space-3);
-  border-top: 2px solid var(--ink);
+  padding-top: calc(var(--space-3) + 2px);
+}
+
+/* Linia groasă de deasupra (pseudo-element, ca să poată fi animată la scroll) */
+.section-head::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--ink);
+  transform-origin: left;
 }
 
 /* Două secțiuni una după alta: fără spațiu dublu între ele */
@@ -1095,6 +1119,7 @@ h3 {
 }
 
 .hero-media {
+  overflow: hidden; /* poza hero „crește” ușor la intrare, fără să iasă din cadru */
   background: var(--placeholder);
 }
 
@@ -3546,6 +3571,144 @@ ul.guide-safety-list {
 @keyframes drop-in {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: none; }
+}
+
+
+/* ===== Animații de intrare și scroll =====
+   Intrarea (la deschiderea paginii) e CSS pur: pornește singură, fără JS.
+   animation-fill-mode: backwards → după animație elementul revine exact la
+   stilurile lui obișnuite (hover, apăsare etc. merg normal).
+   Aparițiile la scroll: vezi initReveal() în main.js (clasa html.js-reveal).
+   Totul e oprit la prefers-reduced-motion (secțiunea 99). */
+
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(var(--enter-shift)); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes enter-up-small {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes enter-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hero-uncover {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0); }
+}
+
+@keyframes hero-settle {
+  from { transform: scale(1.06); }
+  to { transform: none; }
+}
+
+@keyframes enter-image {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 1. Acasă: etichetă → titlu → text → butoane, iar poza se descoperă de jos în sus.
+   (Header-ul și banda de sus nu se animă.) Totul se termină în ~900ms. */
+[data-page="home"] .hero-text .eyebrow {
+  animation: enter-up-small var(--dur-slow) var(--ease-enter) backwards;
+}
+
+[data-page="home"] .hero-text h1 {
+  animation: enter-up var(--dur-reveal) var(--ease-enter) 80ms backwards;
+}
+
+[data-page="home"] .hero-lead {
+  animation: enter-up var(--dur-reveal) var(--ease-enter) 200ms backwards;
+}
+
+[data-page="home"] .hero-actions .btn:nth-child(1) {
+  animation: enter-up var(--dur-reveal) var(--ease-enter) 280ms backwards;
+}
+
+[data-page="home"] .hero-actions .btn:nth-child(2) {
+  animation: enter-up var(--dur-reveal) var(--ease-enter) 360ms backwards;
+}
+
+[data-page="home"] .hero-media img {
+  animation:
+    hero-uncover var(--dur-hero) var(--ease-enter) backwards,
+    hero-settle 900ms var(--ease-enter) backwards;
+}
+
+/* 3. Produs: etichetă, titlu, descriere, preț în cascadă; poza mare; miniaturile */
+[data-page="product"] .product-head > * {
+  animation: enter-up var(--dur-reveal) var(--ease-enter) backwards;
+}
+
+[data-page="product"] .product-head > :nth-child(2) { animation-delay: 60ms; }
+[data-page="product"] .product-head > :nth-child(3) { animation-delay: 120ms; }
+[data-page="product"] .product-head > :nth-child(4) { animation-delay: 180ms; }
+
+[data-page="product"] .gallery-main .product-img {
+  animation: enter-image 500ms var(--ease-enter) backwards;
+}
+
+[data-page="product"] .thumbs li {
+  animation: enter-fade var(--dur-slow) var(--ease-enter) backwards;
+}
+
+[data-page="product"] .thumbs li:nth-child(2) { animation-delay: 40ms; }
+[data-page="product"] .thumbs li:nth-child(3) { animation-delay: 80ms; }
+[data-page="product"] .thumbs li:nth-child(4) { animation-delay: 120ms; }
+
+/* Catalog: titlul și filtrele apar cu fade; primele 8 carduri în cascadă.
+   Doar la prima deschidere: după ~1s, main.js pune html.entered, ca un
+   catalog redesenat (alt filtru) să nu repete intrarea. */
+[data-page="catalog"] .page-head,
+[data-page="catalog"] #catalog-filters {
+  animation: enter-fade var(--dur-slow) var(--ease-enter) backwards;
+}
+
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(-n+8) {
+  animation: enter-up var(--dur-reveal) var(--ease-enter) backwards;
+}
+
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(2) { animation-delay: 40ms; }
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(3) { animation-delay: 80ms; }
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(4) { animation-delay: 120ms; }
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(5) { animation-delay: 160ms; }
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(6) { animation-delay: 200ms; }
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(7) { animation-delay: 240ms; }
+html:not(.entered) [data-page="catalog"] #catalog-grid > :nth-child(8) { animation-delay: 280ms; }
+
+/* Ghid, Coș, Checkout, Confirmare, Credite: un fade-up scurt al conținutului */
+[data-page="guide"] #main,
+[data-page="cart"] #main,
+[data-page="checkout"] #main,
+[data-page="confirmation"] #main,
+[data-page="credits"] #main {
+  animation: enter-up var(--dur-slow) var(--ease-enter) backwards;
+}
+
+/* 2. Apariții la scroll (o singură dată). Ascunse DOAR dacă JS a pus html.js-reveal. */
+.js-reveal [data-reveal]:not(.is-revealed) {
+  opacity: 0;
+  transform: translateY(var(--enter-shift));
+  transition: none; /* ascunderea e instantă (elementul e oricum sub ecran) */
+}
+
+.js-reveal [data-reveal].is-revealed {
+  transition:
+    opacity var(--dur-reveal) var(--ease-enter) var(--reveal-delay, 0ms),
+    transform var(--dur-reveal) var(--ease-enter) var(--reveal-delay, 0ms);
+}
+
+/* Linia de deasupra titlurilor se „desenează” de la stânga */
+.js-reveal .section-head[data-reveal]:not(.is-revealed)::before {
+  transform: scaleX(0);
+}
+
+.js-reveal .section-head[data-reveal].is-revealed::before {
+  transition: transform 500ms var(--ease-enter) var(--reveal-delay, 0ms);
 }
 
 

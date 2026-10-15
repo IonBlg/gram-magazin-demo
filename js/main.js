@@ -175,6 +175,93 @@ function animateBarsFrom(oldWidths) {
 }
 
 
+/* ---------- 1c. Animații de intrare și apariții la scroll ---------- */
+// Intrarea la deschiderea paginii e CSS pur (vezi style.css). Aici sunt doar
+// aparițiile la scroll: elementele cu data-reveal apar (fade + urcare) când
+// intră în ecran, o singură dată. data-reveal-delay = pasul în ms între
+// elementele care intră în ecran în același timp (stagger, maxim 8).
+
+// Marchează elementele care apar la scroll (ex: cardurile randate de JS)
+function markReveal(selector, step) {
+  document.querySelectorAll(selector).forEach(el => {
+    el.setAttribute("data-reveal", "");
+    if (step) el.setAttribute("data-reveal-delay", step);
+  });
+}
+
+function initReveal() {
+  // După intrare (~1s), animațiile CSS de intrare nu se mai repetă
+  // (ex: catalogul redesenat la schimbarea unui filtru)
+  setTimeout(() => document.documentElement.classList.add("entered"), 1000);
+
+  const elements = [...document.querySelectorAll("[data-reveal]")];
+  if (elements.length === 0) return;
+
+  // Mișcare redusă sau browser fără IntersectionObserver: totul rămâne vizibil
+  if (prefersReducedMotion() || !("IntersectionObserver" in window)) return;
+
+  // După apariție, scoatem marcajul: elementul revine la stilurile lui obișnuite
+  // (ex: tranziția de hover a cardurilor)
+  const cleanUp = el => {
+    el.removeAttribute("data-reveal");
+    el.classList.remove("is-revealed");
+    el.style.removeProperty("--reveal-delay");
+  };
+
+  const reveal = (el, delay) => {
+    el.style.setProperty("--reveal-delay", delay + "ms");
+    el.classList.add("is-revealed");
+    setTimeout(() => cleanUp(el), delay + 700);
+  };
+
+  // Ce e deja în dreptul ecranului la încărcare nu se ascunde deloc.
+  // Verificăm doar pe verticală: un card din rândul glisabil de categorii,
+  // aflat încă în dreapta, nu trebuie să lase un gol când glisezi rândul.
+  const isOnScreen = el => {
+    const r = el.getBoundingClientRect();
+    return r.top < window.innerHeight && r.bottom > 0;
+  };
+  const waiting = elements.filter(el => {
+    if (isOnScreen(el)) {
+      cleanUp(el);
+      return false;
+    }
+    return true;
+  });
+
+  document.documentElement.classList.add("js-reveal");
+
+  const observer = new IntersectionObserver(entries => {
+    // Elementele care intră împreună apar în ordine (sus → jos, stânga → dreapta)
+    const entering = entries
+      .filter(entry => entry.isIntersecting)
+      .map(entry => entry.target)
+      .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top ||
+                      a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+
+    entering.forEach((el, i) => {
+      const step = Number(el.dataset.revealDelay) || 0;
+      reveal(el, i < 8 ? i * step : 0);
+      observer.unobserve(el);
+    });
+  }, { threshold: 0.15, rootMargin: "0px 0px -10% 0px" });
+
+  waiting.forEach(el => observer.observe(el));
+
+  // Plasă de siguranță: după 2,5s, tot ce AR TREBUI să se vadă deja
+  // (e în ecran sau deasupra lui) și n-a apărut, apare oricum
+  setTimeout(() => {
+    waiting.forEach(el => {
+      if (el.hasAttribute("data-reveal") && !el.classList.contains("is-revealed") &&
+          el.getBoundingClientRect().top < window.innerHeight) {
+        observer.unobserve(el);
+        reveal(el, 0);
+      }
+    });
+  }, 2500);
+}
+
+
 /* ---------- 2. Funcții ajutătoare ---------- */
 
 // Ia un parametru din adresă: produs.html?id=abc → getParam("id") = "abc"
@@ -787,6 +874,9 @@ function initHome() {
   });
   document.getElementById("featured-grid").innerHTML =
     featured.map(p => productCard(p)).join("");
+
+  // Aparițiile la scroll: cardurile de categorii, produse și kit-uri (60ms între ele)
+  markReveal("#category-grid > *, #featured-grid > *, #kit-grid > *", 60);
 
   // Banda cu informații (cifrele vin din SHOP)
   document.getElementById("free-shipping-text").textContent =
@@ -2332,6 +2422,9 @@ if (page === "cart") initCart();
 if (page === "checkout") initCheckout();
 if (page === "confirmation") initConfirmation();
 if (page === "guide") initGuide();
+
+// Aparițiile la scroll (după ce conținutul a fost desenat)
+initReveal();
 
 // Pozele care erau deja încărcate (din cache) apar imediat
 markLoadedImages();
