@@ -55,7 +55,7 @@ apoi deschide `http://localhost:8000`.
 
 ## Versiunea fișierelor (contra cache-ului)
 
-În toate paginile, `css/style.css` și fișierele din `js/` sunt încărcate cu un număr de versiune, de exemplu `css/style.css?v=2026101501`. **La fiecare schimbare de CSS sau JS, numărul se mărește** (pe toate paginile), ca browserele vizitatorilor să descarce fișierele noi în loc să le folosească pe cele vechi din cache. Formatul folosit: anul, luna, ziua + un număr de ordine (`2026101501`).
+În toate paginile, `css/style.css` și fișierele din `js/` sunt încărcate cu un număr de versiune, de exemplu `css/style.css?v=2026101502`. **La fiecare schimbare de CSS sau JS, numărul se mărește** (pe toate paginile), ca browserele vizitatorilor să descarce fișierele noi în loc să le folosească pe cele vechi din cache. Formatul folosit: anul, luna, ziua + un număr de ordine (`2026101502`).
 
 ## Limitări (e un demo)
 

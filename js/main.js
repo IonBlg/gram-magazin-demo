@@ -21,7 +21,8 @@ const ICON_PATHS = {
   arrowLeft: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/>',
   chevron: '<path d="M6 9l6 6 6-6"/>',
-  check: '<path d="M5 12l5 5 9-10"/>'
+  check: '<path d="M5 12l5 5 9-10"/>',
+  cube: '<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>'
 };
 
 // Întoarce codul SVG al unei iconițe (aria-hidden: e doar decor)
@@ -684,6 +685,9 @@ function productCard(product, lazy = true) {
   }
 
   // Eticheta de pe poză: „Stoc epuizat” are prioritate
+  // Produsele cu model 3D primesc eticheta „3D” în colțul din dreapta
+  const badge3d = product.model3d ? '<span class="badge badge-3d">3D</span>' : "";
+
   let badge = "";
   if (!product.inStock) {
     badge = '<span class="badge badge-dark">Stoc epuizat</span>';
@@ -697,6 +701,7 @@ function productCard(product, lazy = true) {
         <img src="${product.images[0]}" alt="${product.name}" width="1200" height="1500"
           ${lazy ? 'loading="lazy"' : ""}>
         ${badge}
+        ${badge3d}
       </div>
       <div class="card-body">
         <p class="eyebrow">${category.name}</p>
@@ -1035,7 +1040,8 @@ const productState = {
   variant: null,
   color: null,
   quantity: 1,
-  imageIndex: 0 // miniatura selectată în galerie
+  imageIndex: 0, // miniatura selectată în galerie
+  viewing3d: false // true cât e deschis modelul 3D
 };
 
 function initProduct() {
@@ -1063,6 +1069,7 @@ function initProduct() {
   setupQuantity();
   window.addEventListener("load", () => preloadColorImages(product));
   setupAddToCart();
+  setup3dViewer();
   updateProductDetails();
 }
 
@@ -1151,14 +1158,170 @@ function galleryHTML(product) {
     thumbs = `<ul class="thumbs">${buttons}</ul>`;
   }
 
+  // Butonul „Vezi în 3D” (doar la produsele cu model3d; apare doar la culoarea implicită)
+  let viewer3d = "";
+  if (product.model3d) {
+    const colorName = product.colors.length > 0 ? product.colors[0].name : "";
+    viewer3d = `
+      <div class="viewer3d-controls" id="viewer3d-controls">
+        <button class="btn btn-secondary btn-3d" type="button" id="view-3d">
+          ${icon("cube", "icon-sm")}<span>Vezi în 3D</span>
+        </button>
+        ${colorName ? `<p class="viewer3d-note">Model 3D disponibil în culoarea ${colorName}.</p>` : ""}
+      </div>`;
+  }
+
   // Prima poză vizibilă: fără loading="lazy"
   return `
     <div class="gallery">
       <div class="gallery-main">
         <img class="product-img" id="main-image" src="${product.images[0]}" alt="${product.name}" width="1200" height="1500">
       </div>
-      ${thumbs}
+      <div class="gallery-bar">
+        ${thumbs}
+        ${viewer3d}
+      </div>
+      <p class="viewer3d-status" id="viewer3d-status" role="status"></p>
     </div>`;
+}
+
+/* ----- Vizualizarea 3D (model-viewer de la Google) -----
+   Biblioteca și modelul se descarcă doar la click pe „Vezi în 3D”. */
+
+const MODEL_VIEWER_SRC = "https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js";
+let modelViewerLoading = null; // promisiunea încărcării, ca scriptul să fie inserat o singură dată
+
+// Inserează scriptul model-viewer (o singură dată) și așteaptă să fie gata
+function loadModelViewer() {
+  if (!modelViewerLoading) {
+    modelViewerLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.type = "module";
+      script.src = MODEL_VIEWER_SRC;
+      script.onload = () => customElements.whenDefined("model-viewer").then(resolve);
+      script.onerror = () => {
+        modelViewerLoading = null; // la următorul click încercăm din nou
+        script.remove();
+        reject(new Error("model-viewer nu s-a încărcat"));
+      };
+      document.head.appendChild(script);
+    });
+  }
+  return modelViewerLoading;
+}
+
+// Modelul 3D arată doar culoarea implicită (prima din listă)
+function is3dColorSelected() {
+  const { product, color } = productState;
+  return product.colors.length === 0 || Boolean(color && color.id === product.colors[0].id);
+}
+
+function setup3dViewer() {
+  const button = document.getElementById("view-3d");
+  if (!button) return;
+  button.addEventListener("click", () => {
+    if (productState.viewing3d) {
+      close3d();
+    } else {
+      open3d();
+    }
+  });
+  update3dAvailability();
+}
+
+// La schimbarea culorii: butonul apare doar la culoarea modelului;
+// dacă 3D-ul era deschis pe altă culoare, revenim la poze
+function update3dAvailability() {
+  const controls = document.getElementById("viewer3d-controls");
+  if (!controls) return;
+  const available = is3dColorSelected();
+  controls.hidden = !available;
+  if (!available && productState.viewing3d) close3d();
+}
+
+function set3dButton(isOpen) {
+  document.getElementById("view-3d").innerHTML = isOpen
+    ? `${icon("arrowLeft", "icon-sm")}<span>Înapoi la poze</span>`
+    : `${icon("cube", "icon-sm")}<span>Vezi în 3D</span>`;
+}
+
+// Deschide modelul 3D în locul pozei mari (stă peste poză, deci aceleași dimensiuni)
+async function open3d() {
+  const { product } = productState;
+  const main = document.querySelector(".gallery-main");
+  document.getElementById("viewer3d-status").textContent = "";
+  productState.viewing3d = true;
+  set3dButton(true);
+  main.classList.add("is-3d");
+
+  // Cât se încarcă: text + bară de progres
+  main.insertAdjacentHTML("beforeend", `
+    <div class="viewer3d-loading" id="viewer3d-loading">
+      <p>Se încarcă modelul 3D…</p>
+      <div class="progress" aria-hidden="true"><div class="progress-fill" id="viewer3d-progress" style="width: 0%"></div></div>
+    </div>`);
+
+  try {
+    await loadModelViewer();
+  } catch (error) {
+    fail3d();
+    return;
+  }
+  if (!productState.viewing3d) return; // între timp utilizatorul a revenit la poze
+
+  const viewer = document.createElement("model-viewer");
+  viewer.id = "viewer3d";
+  const attributes = {
+    src: product.model3d,
+    alt: `Model 3D: ${product.name}, poate fi rotit`,
+    "camera-controls": "",
+    "rotation-per-second": "20deg",
+    "tone-mapping": "neutral",
+    "environment-image": "neutral",
+    exposure: "1.25",
+    "shadow-intensity": "0.6",
+    "camera-orbit": "30deg 75deg auto",
+    "touch-action": "pan-y", // pe telefon pagina se poate derula și peste model
+    ar: "",
+    "ar-modes": "webxr scene-viewer quick-look"
+  };
+  if (!prefersReducedMotion()) attributes["auto-rotate"] = "";
+  Object.entries(attributes).forEach(([name, value]) => viewer.setAttribute(name, value));
+
+  // Butonul AR propriu: model-viewer îl arată doar dacă telefonul chiar poate face AR
+  // (slotul progress-bar gol ascunde bara implicită — avem bara noastră de progres)
+  viewer.innerHTML = '<button slot="ar-button" class="btn btn-primary viewer3d-ar" type="button">Vezi în camera ta</button>' +
+    '<div slot="progress-bar"></div>';
+
+  viewer.addEventListener("progress", event => {
+    const bar = document.getElementById("viewer3d-progress");
+    if (bar) bar.style.width = Math.round(event.detail.totalProgress * 100) + "%";
+  });
+  viewer.addEventListener("load", () => {
+    const loading = document.getElementById("viewer3d-loading");
+    if (loading) loading.remove();
+  });
+  viewer.addEventListener("error", fail3d);
+
+  main.appendChild(viewer);
+}
+
+// Închide modelul 3D și readuce galeria
+function close3d() {
+  productState.viewing3d = false;
+  const viewer = document.getElementById("viewer3d");
+  const loading = document.getElementById("viewer3d-loading");
+  if (viewer) viewer.remove();
+  if (loading) loading.remove();
+  document.querySelector(".gallery-main").classList.remove("is-3d");
+  set3dButton(false);
+}
+
+// Modelul nu s-a putut încărca: înapoi la poză + mesaj scurt
+function fail3d() {
+  close3d();
+  document.getElementById("viewer3d-status").textContent =
+    "Modelul 3D nu s-a putut încărca. Am revenit la poze.";
 }
 
 function stockHTML(product) {
@@ -1336,6 +1499,7 @@ function setupGallery() {
 
   thumbs.forEach(thumb => {
     thumb.addEventListener("click", () => {
+      if (productState.viewing3d) close3d(); // o poză aleasă închide modelul 3D
       const { product, color } = productState;
       productState.imageIndex = Number(thumb.dataset.index);
       swapImage(mainImage, getProductImages(product, color && color.id)[productState.imageIndex]);
@@ -1378,6 +1542,7 @@ function setupOptionButtons() {
     button.addEventListener("click", () => {
       productState.color = productState.product.colors.find(c => c.id === button.dataset.color);
       showColorImages();
+      update3dAvailability();
       updateProductDetails();
     });
   });
