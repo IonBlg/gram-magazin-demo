@@ -66,10 +66,6 @@ const TRIP_TYPES = [
                    lipsește, poza implicită de pe aceeași poziție.
                    O culoare fără `images` folosește pozele implicite.
                    Adaugă doar poze care există în images/.
-   - model3d     → opțional: calea unui model 3D (.glb), ex: "models/rucsac-creasta.glb".
-                   Doar produsele cu model3d primesc butonul „Vezi în 3D” și
-                   eticheta „3D” pe card. Modelul arată culoarea implicită
-                   (prima din colors), deci butonul apare doar la culoarea aceea.
    - specs       → fișa tehnică
    - inStock     → true = în stoc
    ---------------------------------------------------------- */
@@ -86,7 +82,6 @@ const PRODUCTS = [
     short: "Rucsac pentru ture de o zi, cu spate ventilat.",
     description: "Spate ventilat, centură șoldieră cu buzunare și compartiment pentru hidratare. Construit pentru ture de o zi pe munte.",
     images: ["images/rucsac-creasta-1.jpg", "images/rucsac-creasta-2.jpg", "images/rucsac-creasta-3.jpg"],
-    model3d: "models/rucsac-creasta.glb", // modelul 3D există doar în Portocaliu
     variants: [
       { id: "20l", label: "20 L", price: 1950, weight: 890 },
       { id: "30l", label: "30 L", price: 2450, weight: 1120 },
