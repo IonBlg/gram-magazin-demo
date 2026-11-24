@@ -419,6 +419,14 @@ h3 {
 
 /* ---------- 7. Header ---------- */
 
+/* Header-ul e scris de main.js după încărcare. Până atunci își ține locul
+   (bara demo: 2 × 8px + 13px × 1,4 · header: 64px + linia de 1px = 99px),
+   ca pagina să nu sară când apare (CLS). */
+#site-header:empty {
+  display: block;
+  min-height: calc(2 * var(--space-2) + 13px * 1.4 + 65px);
+}
+
 /* Banda neagră de sus */
 .demo-bar {
   padding: var(--space-2) var(--gutter);
