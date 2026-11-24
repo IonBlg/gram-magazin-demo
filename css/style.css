@@ -1231,6 +1231,30 @@ h3 {
   }
 }
 
+/* Categoriile sunt scrise de main.js. Până atunci grila își ține înălțimea
+   finală, ca secțiunile de dedesubt să nu sară (CLS).
+   Un card = poza pătrată (cât lățimea lui) + textul de ~64px. */
+.category-grid:empty {
+  box-sizing: content-box;
+  aspect-ratio: 3 / 2;   /* 3 coloane × 2 rânduri de poze */
+  padding-bottom: 122px; /* 2 × textul + spațiul dintre rânduri − spațiile dintre coloane */
+}
+
+@media (min-width: 1100px) {
+  .category-grid:empty {
+    aspect-ratio: 6 / 1; /* 6 coloane × 1 rând */
+    padding-bottom: 50px;
+  }
+}
+
+@media (max-width: 767px) {
+  .category-grid:empty {
+    aspect-ratio: auto;  /* telefon: un rând de carduri de 120px */
+    padding-bottom: 0;
+    min-height: 178px;
+  }
+}
+
 
 /* ---------- 12. Cardul de kit ---------- */
 
